@@ -3,101 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Joana & Toni - Cloud v10 (Secure)</title>
+    <title>Joana & Toni - Finanças</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --joana: #ff7675; --toni: #4a69bd; --success: #2ecc71;
-            --bg: #f8f9fa; --card: #ffffff; --dark: #2f3542; --gray: #a4b0be; --danger: #ff4757;
+            --joana: #ff7675; 
+            --toni: #4a69bd; 
+            --success: #00b894;
+            --bg: #f0f2f5; 
+            --card: #ffffff; 
+            --dark: #2d3436; 
+            --gray: #636e72; 
+            --light-gray: #dfe6e9;
+            --danger: #d63031;
+            --accent: #6c5ce7;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, system-ui, sans-serif; }
-        body { background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--dark); overflow-x: hidden; }
 
-        /* Ecrã de Login */
-        #auth-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
-        .btn-google { background: white; color: var(--dark); padding: 15px 30px; border-radius: 30px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        
+        body { background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--dark); overflow-x: hidden; }
 
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; padding: 12px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.08); z-index: 1000; display: none; }
-        .nav-item { flex: 1; border: none; background: none; color: var(--gray); display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; }
-        .nav-item.active { color: var(--toni); font-weight: bold; }
-        .nav-icon { font-size: 1.4rem; margin-bottom: 3px; }
+        /* Login Screen */
+        #auth-screen { 
+            position: fixed; top:0; left:0; width:100%; height:100%; 
+            background: linear-gradient(135deg, var(--dark) 0%, #000 100%); 
+            z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            color: white; text-align: center; padding: 30px; 
+        }
+        .btn-google { 
+            background: white; color: var(--dark); padding: 16px 32px; border-radius: 50px; 
+            border: none; font-weight: bold; font-size: 1rem; cursor: pointer; 
+            display: flex; align-items: center; gap: 12px; transition: transform 0.2s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .btn-google:active { transform: scale(0.95); }
 
-        .section { display: none; padding: 20px; animation: fadeIn 0.2s ease-out; }
+        /* Navigation */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            display: none; padding: 10px 0; border-top: 1px solid var(--light-gray);
+            z-index: 1000; justify-content: space-around;
+        }
+        .nav-item { 
+            border: none; background: none; color: var(--gray); 
+            display: flex; flex-direction: column; align-items: center; 
+            font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 1.5rem; margin-bottom: 4px; }
+
+        /* Sections */
+        .section { display: none; padding: 20px; animation: slideUp 0.3s ease-out; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card { background: var(--card); border-radius: 18px; padding: 18px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-        h1 { font-size: 1.3rem; margin: 0 0 15px 0; }
-        h2 { font-size: 0.85rem; color: var(--gray); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .filter-row { display: flex; gap: 8px; margin-bottom: 15px; }
-        .filter-row select { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ddd; background: #fff; font-size: 0.9rem; }
+        /* Header UI */
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .user-badge { background: var(--light-gray); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: var(--gray); }
 
-        .main-balance { background: var(--dark); color: white; border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 15px; }
-        .balance-val { font-size: 2.2rem; font-weight: 800; display: block; }
-        
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; background: #fff; }
-        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; }
-        .btn-save { background: var(--dark); color: white; margin-top: 10px; }
-        
-        .item { background: white; padding: 12px 15px; border-radius: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #ddd; }
-        .item.exp-j { border-left-color: var(--joana); }
-        .item.exp-t { border-left-color: var(--toni); }
-        .item.pay { border-left-color: var(--success); }
-        
-        .shortcuts-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
-        .btn-short { background: #eee; border: none; padding: 8px 14px; border-radius: 20px; font-size: 0.75rem; color: var(--dark); }
-        
-        .text-j { color: var(--joana); }
-        .text-t { color: var(--toni); }
-        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:2000; }
-        .chart-container { position: relative; height: 200px; width: 100%; }
+        /* Main Balance Card */
+        .main-balance { 
+            background: linear-gradient(135deg, #2d3436 0%, #636e72 100%); 
+            color: white; border-radius: 24px; padding: 30px 20px; 
+            text-align: center; margin-bottom: 20px; box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        .balance-label { font-size: 0.75rem; text-transform: uppercase; opacity: 0.8; letter-spacing: 2px; margin-bottom: 10px; }
+        .balance-val { font-size: 2.8rem; font-weight: 800; display: block; margin-bottom: 10px; }
+        .balance-msg { background: rgba(255,255,255,0.15); display: inline-block; padding: 6px 16px; border-radius: 50px; font-size: 0.9rem; }
+
+        /* Small Info Cards */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .info-card { background: white; padding: 15px; border-radius: 18px; border-bottom: 4px solid var(--light-gray); }
+        .info-card.j { border-color: var(--joana); }
+        .info-card.t { border-color: var(--toni); }
+        .info-card label { display: block; font-size: 0.7rem; color: var(--gray); text-transform: uppercase; margin-bottom: 5px; }
+        .info-card b { font-size: 1.1rem; }
+
+        /* Standard Card */
+        .card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        h2 { font-size: 0.8rem; color: var(--gray); margin-top: 0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+
+        /* Filters */
+        .filter-group { display: flex; gap: 10px; background: var(--light-gray); padding: 5px; border-radius: 14px; margin-bottom: 15px; }
+        .filter-group select { 
+            flex: 1; border: none; background: none; padding: 10px; 
+            font-size: 0.9rem; font-weight: bold; color: var(--dark); outline: none;
+        }
+
+        /* Forms */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--gray); margin-bottom: 8px; }
+        input, select { 
+            width: 100%; padding: 14px; border: 1px solid var(--light-gray); 
+            border-radius: 12px; font-size: 1rem; background: #fff; transition: border 0.2s;
+        }
+        input:focus { border-color: var(--accent); outline: none; }
+
+        .btn { 
+            width: 100%; padding: 18px; border: none; border-radius: 15px; 
+            font-weight: 800; font-size: 1rem; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-save { background: var(--accent); color: white; box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3); }
+        .btn-save:active { transform: scale(0.98); }
+
+        /* List Items */
+        .item { 
+            background: white; padding: 16px; border-radius: 18px; margin-bottom: 12px; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .item-border { width: 5px; height: 40px; border-radius: 10px; margin-right: 15px; }
+        .bg-j { background-color: var(--joana); }
+        .bg-t { background-color: var(--toni); }
+        .bg-pay { background-color: var(--success); }
+
+        .item-data { flex: 1; }
+        .item-data b { display: block; font-size: 1rem; margin-bottom: 2px; }
+        .item-data small { color: var(--gray); font-size: 0.75rem; }
+        .item-val { text-align: right; font-weight: 800; font-size: 1rem; margin-left: 10px; }
+
+        .actions { display: flex; gap: 10px; margin-left: 15px; }
+        .btn-icon { border: none; background: var(--bg); padding: 8px; border-radius: 10px; cursor: pointer; font-size: 1rem; }
+
+        .chart-container { position: relative; height: 250px; width: 100%; }
     </style>
 </head>
 <body>
 
-    <!-- ECRÃ DE LOGIN -->
+    <!-- TELA DE LOGIN -->
     <div id="auth-screen">
-        <h1 style="color: white; font-size: 2rem;">👫 Contas Joana & Toni</h1>
-        <p style="opacity: 0.7; margin-bottom: 30px;">Inicia sessão para continuar</p>
+        <div style="font-size: 4rem; margin-bottom: 20px;">🏠</div>
+        <h1 style="color: white; font-size: 1.8rem; margin: 0;">Finanças da Casa</h1>
+        <p style="opacity: 0.6; margin-bottom: 40px; font-size: 0.9rem;">Joana & Toni</p>
         <button class="btn-google" onclick="window.loginGoogle()">
             <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="20"> Entrar com Google
         </button>
-        <p id="auth-msg" style="margin-top: 20px; color: #ff7675; font-size: 0.9rem;"></p>
+        <p id="auth-msg" style="margin-top: 30px; color: var(--joana); font-size: 0.85rem; font-weight: bold;"></p>
     </div>
 
-    <!-- APP (Escondida até login) -->
+    <!-- APP CONTENT -->
     <div id="app-content" style="display: none;">
         
         <!-- HOME -->
         <div id="tab-home" class="section active">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>Resumo 📊</h1>
-                <button onclick="window.logout()" style="border:none; background:none; font-size: 0.8rem; color: var(--danger);">Sair</button>
+            <div class="header-flex">
+                <span class="user-badge" id="user-display">Olá!</span>
+                <button onclick="window.logout()" style="border:none; background:none; font-size: 0.7rem; color: var(--danger); font-weight: 800; text-transform: uppercase;">Sair</button>
             </div>
             
             <div class="main-balance">
-                <div style="font-size: 0.7rem; opacity: 0.8; text-transform: uppercase;">Dívida Total Acumulada</div>
+                <div class="balance-label">Balanço Acumulado</div>
                 <span class="balance-val" id="valSaldoGlobal">0.00€</span>
-                <div id="msgSaldoGlobal" style="font-size: 0.9rem; margin-top: 5px;">A carregar...</div>
+                <div class="balance-msg" id="msgSaldoGlobal">A carregar...</div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card j">
+                    <label>Joana pagou</label>
+                    <b class="text-j" id="dashJ">0€</b>
+                </div>
+                <div class="info-card t">
+                    <label>Toni pagou</label>
+                    <b class="text-t" id="dashT">0€</b>
+                </div>
             </div>
 
             <div class="card">
-                <h2>Filtro de Período</h2>
-                <div class="filter-row">
+                <h2>Balanço do Período</h2>
+                <div class="filter-group">
                     <select class="selMes" onchange="syncFilters(this)"></select>
                     <select class="selAno" onchange="syncFilters(this)"></select>
                 </div>
-                <div style="text-align: center; border-top: 1px solid #eee; padding-top: 10px;">
-                    <span id="valSaldoMes" style="font-size: 1.5rem; font-weight: bold; display: block;">0.00€</span>
-                    <small id="msgSaldoMes" style="color: var(--gray);"></small>
+                <div style="text-align: center; padding: 10px 0;">
+                    <span id="valSaldoMes" style="font-size: 1.8rem; font-weight: 800; color: var(--accent);">0.00€</span>
+                    <p id="msgSaldoMes" style="margin: 5px 0 0; font-size: 0.85rem; color: var(--gray);"></p>
                 </div>
             </div>
 
             <div class="card">
-                <label>⚙️ Ajuste de Dívida Inicial (2025)</label>
-                <div style="display: flex; gap: 8px; margin-top:5px;">
-                    <input type="number" id="cfgD25" onchange="updateCfgCloud()" placeholder="0.00">
+                <h2>Configuração 2025</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="number" id="cfgD25" onchange="updateCfgCloud()" placeholder="Valor">
                     <select id="cfgDev25" onchange="updateCfgCloud()">
                         <option value="Joana">Joana deve</option>
                         <option value="Toni">Toni deve</option>
@@ -108,46 +195,57 @@
 
         <!-- ANÁLISE -->
         <div id="tab-analise" class="section">
-            <h1>Análise</h1>
-            <div class="filter-row">
+            <div class="header-flex"><h1>Análise</h1></div>
+            <div class="filter-group">
                 <select class="selMes" onchange="syncFilters(this)"></select>
                 <select class="selAno" onchange="syncFilters(this)"></select>
             </div>
-            <div class="card"><h2>Categorias</h2><div class="chart-container"><canvas id="chartCategorias"></canvas></div></div>
-            <div class="card"><h2>Joana vs Toni</h2><div class="chart-container"><canvas id="chartComparacao"></canvas></div></div>
+            <div class="card"><h2>Gastos por Categoria</h2><div class="chart-container"><canvas id="chartCategorias"></canvas></div></div>
+            <div class="card"><h2>Comparação de Gastos</h2><div class="chart-container"><canvas id="chartComparacao"></canvas></div></div>
         </div>
 
         <!-- NOVO -->
         <div id="tab-novo" class="section">
-            <h1 id="titleForm">Novo Registo</h1>
+            <div class="header-flex"><h1 id="titleForm">Novo Registo</h1></div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <label>Atalhos:</label>
-                    <div>
-                        <button onclick="openModalCat()" style="border:none; background:none; font-size:1.1rem;">➕</button>
-                        <button onclick="toggleEditMode()" id="btnEditMode" style="border:none; background:none; font-size:1.1rem;">⚙️</button>
-                    </div>
+                <div class="form-group">
+                    <label>Tipo de Transação</label>
+                    <select id="inType">
+                        <option value="EXP">Despesa (Dividir 50/50)</option>
+                        <option value="PAY">Pagamento (Acerto de contas)</option>
+                    </select>
                 </div>
-                <div class="shortcuts-grid" id="shortcutsContainer"></div>
-            </div>
-            <div class="card">
-                <div class="form-group"><label>Tipo</label><select id="inType"><option value="EXP">Despesa (50/50)</option><option value="PAY">Pagamento (Acerto)</option></select></div>
-                <div class="form-group"><label>Data</label><input type="date" id="inDate"></div>
-                <div class="form-group"><label>Descrição</label><input type="text" id="inDesc" placeholder="Ex: Lidl"></div>
-                <div class="form-group"><label>Valor (€)</label><input type="number" id="inVal" placeholder="0.00" step="0.01"></div>
-                <div class="form-group"><label>Quem pagou?</label><select id="inQuem"><option value="Joana">Joana</option><option value="Toni">Toni</option></select></div>
-                <button class="btn btn-save" onclick="saveToCloud()">Gravar na Cloud</button>
-                <button id="btnCancel" onclick="cancelEdit()" style="display:none; width:100%; margin-top:10px; border:none; background:none; color:var(--danger);">Cancelar</button>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="inDate">
+                </div>
+                <div class="form-group">
+                    <label>Descrição / Categoria</label>
+                    <input type="text" id="inDesc" placeholder="Ex: Compras Lidl, Renda...">
+                </div>
+                <div class="form-group">
+                    <label>Valor (€)</label>
+                    <input type="number" id="inVal" placeholder="0.00" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Quem pagou?</label>
+                    <select id="inQuem">
+                        <option value="Joana">Joana</option>
+                        <option value="Toni">Toni</option>
+                    </select>
+                </div>
+                <button class="btn btn-save" onclick="saveToCloud()">Gravar Registo</button>
+                <button id="btnCancel" onclick="cancelEdit()" style="display:none; width:100%; margin-top:10px; border:none; background:none; color:var(--danger); font-weight: bold;">Cancelar Edição</button>
             </div>
         </div>
 
         <!-- LISTA -->
         <div id="tab-hist" class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div class="header-flex">
                 <h1>Histórico</h1>
-                <span id="countReg" style="font-size: 0.8rem; color: var(--gray); background: #eee; padding: 2px 8px; border-radius: 10px;">0</span>
+                <span class="user-badge" id="countReg">0</span>
             </div>
-            <div class="filter-row">
+            <div class="filter-group">
                 <select class="selMes" onchange="syncFilters(this)"></select>
                 <select class="selAno" onchange="syncFilters(this)"></select>
             </div>
@@ -156,28 +254,18 @@
 
         <!-- NAV -->
         <nav class="bottom-nav" id="main-nav">
-            <button class="nav-item active" onclick="nav('home', this)"><span class="nav-icon">📊</span>Home</button>
+            <button class="nav-item active" onclick="nav('home', this)"><span class="nav-icon">🏠</span>Home</button>
             <button class="nav-item" onclick="nav('analise', this)"><span class="nav-icon">📈</span>Análise</button>
             <button class="nav-item" onclick="nav('novo', this)"><span class="nav-icon">➕</span>Novo</button>
             <button class="nav-item" onclick="nav('hist', this)"><span class="nav-icon">📜</span>Lista</button>
         </nav>
     </div>
 
-    <!-- MODAL CAT -->
-    <div id="modalCat" class="modal">
-        <div class="card" style="width: 85%;">
-            <h3>Novo Atalho</h3>
-            <input type="text" id="newCatName" placeholder="Ex: 🛒 Mercadona">
-            <div style="display:flex; gap:10px; margin-top:15px;"><button class="btn btn-save" onclick="addShortcutCloud()">Guardar</button><button class="btn" onclick="closeModalCat()">Sair</button></div>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // CONFIGURAÇÃO FIREBASE (Substitui pelos teus dados se necessário)
         const firebaseConfig = {
             apiKey: "AIzaSyCAO6gr87Mu3XRDtN2mGl7GjsutZ0Qw9bQ",
             authDomain: "divisao-despesas.firebaseapp.com",
@@ -192,47 +280,43 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // EMAILS PERMITIDOS (COLOCA OS VOSSOS AQUI)
-        const emailsPermitidos = ["teu-email@gmail.com", "email-da-joana@gmail.com"];
+        const emailsPermitidos = ["joana1589@gmail.com", "teu-email-toni@gmail.com"];
 
         window.registros = [];
         window.config = { d25: 0, dev25: 'Toni' };
-        window.shortcuts = [];
-        window.editingId = null;
 
-        // AUTH LOGIC
         window.loginGoogle = () => {
             signInWithPopup(auth, provider).catch(err => {
-                document.getElementById('auth-msg').innerText = "Erro no login: " + err.message;
+                document.getElementById("auth-msg").innerText = "Erro: " + err.message;
             });
         };
 
         window.logout = () => signOut(auth).then(() => location.reload());
 
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, user => {
             if (user) {
-                if (emailsPermitidos.includes(user.email) || emailsPermitidos[0] === "teu-email@gmail.com") {
-                    document.getElementById('auth-screen').style.display = 'none';
-                    document.getElementById('app-content').style.display = 'block';
-                    document.getElementById('main-nav').style.display = 'flex';
-                    initApp();
+                if (emailsPermitidos.includes(user.email) || user.email.includes("joana1589")) {
+                    document.getElementById("user-display").innerText = "Olá, " + user.displayName.split(' ')[0] + "!";
+                    document.getElementById("auth-screen").style.display = "none";
+                    document.getElementById("app-content").style.display = "block";
+                    document.getElementById("main-nav").style.display = "flex";
+                    startListeners();
                 } else {
-                    document.getElementById('auth-msg').innerText = "Acesso negado para " + user.email;
+                    document.getElementById("auth-msg").innerText = "Acesso Negado: " + user.email;
                     signOut(auth);
                 }
             } else {
-                document.getElementById('auth-screen').style.display = 'flex';
-                document.getElementById('app-content').style.display = 'none';
-                document.getElementById('main-nav').style.display = 'none';
+                document.getElementById("auth-screen").style.display = "flex";
+                document.getElementById("app-content").style.display = "none";
+                document.getElementById("main-nav").style.display = "none";
             }
         });
 
-        function initApp() {
+        function startListeners() {
             onSnapshot(query(collection(db, "registos"), orderBy("date", "desc")), (snap) => {
                 window.registros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 render();
             });
-
             onSnapshot(doc(db, "settings", "config"), (d) => {
                 if (d.exists()) {
                     window.config = d.data();
@@ -241,14 +325,8 @@
                     render();
                 }
             });
-
-            onSnapshot(doc(db, "settings", "shortcuts"), (d) => {
-                window.shortcuts = d.exists() ? d.data().list : ["🏠 Casa", "🛒 Lidl", "💡 Luz"];
-                renderShortcuts();
-            });
         }
 
-        // CLOUD FUNCTIONS
         window.saveToCloud = async () => {
             const data = {
                 type: document.getElementById('inType').value,
@@ -257,8 +335,8 @@
                 val: parseFloat(document.getElementById('inVal').value),
                 quem: document.getElementById('inQuem').value
             };
-            if(!data.date || !data.desc || isNaN(data.val)) return alert("Dados incompletos!");
-
+            if(!data.date || !data.desc || isNaN(data.val)) return alert("Preenche todos os campos!");
+            
             if(window.editingId) {
                 await updateDoc(doc(db, "registos", window.editingId), data);
                 window.editingId = null;
@@ -270,7 +348,7 @@
         };
 
         window.delCloud = async (id) => {
-            if(confirm("Apagar?")) await deleteDoc(doc(db, "registos", id));
+            if(confirm("Eliminar este registo?")) await deleteDoc(doc(db, "registos", id));
         };
 
         window.updateCfgCloud = async () => {
@@ -279,19 +357,6 @@
                 dev25: document.getElementById('cfgDev25').value
             };
             await setDoc(doc(db, "settings", "config"), newCfg);
-        };
-
-        window.addShortcutCloud = async () => {
-            const name = document.getElementById('newCatName').value.trim();
-            if(name && !window.shortcuts.includes(name)) {
-                await setDoc(doc(db, "settings", "shortcuts"), { list: [...window.shortcuts, name] });
-                document.getElementById('newCatName').value = '';
-                closeModalCat();
-            }
-        };
-
-        window.removeShortcutCloud = async (name) => {
-            await setDoc(doc(db, "settings", "shortcuts"), { list: window.shortcuts.filter(s => s !== name) });
         };
 
         window.editCloud = (id) => {
@@ -315,104 +380,92 @@
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
-            el.classList.add('active');
+            if(el) el.classList.add('active');
             render();
         }
 
         function syncFilters(el) {
-            const isMes = el.classList.contains('selMes');
             const val = el.value;
-            document.querySelectorAll(isMes ? '.selMes' : '.selAno').forEach(s => s.value = val);
+            const cls = el.classList.contains('selMes') ? '.selMes' : '.selAno';
+            document.querySelectorAll(cls).forEach(s => s.value = val);
             render();
         }
 
-        function renderShortcuts() {
-            const container = document.getElementById('shortcutsContainer');
-            if(!container) return;
-            container.innerHTML = '';
-            window.shortcuts.forEach(s => {
-                const btn = document.createElement('button');
-                btn.className = 'btn-short' + (window.isEditMode ? ' delete-mode' : '');
-                btn.innerHTML = window.isEditMode ? `${s} ✕` : s;
-                btn.onclick = () => window.isEditMode ? window.removeShortcutCloud(s) : document.getElementById('inDesc').value = s;
-                container.appendChild(btn);
-            });
+        function cancelEdit() { 
+            window.editingId = null; 
+            document.getElementById('titleForm').innerText = "Novo Registo"; 
+            document.getElementById('inDesc').value = ''; document.getElementById('inVal').value = ''; 
+            document.getElementById('btnCancel').style.display = "none"; 
         }
-
-        function toggleEditMode() { window.isEditMode = !window.isEditMode; renderShortcuts(); }
-        function openModalCat() { document.getElementById('modalCat').style.display = 'flex'; }
-        function closeModalCat() { document.getElementById('modalCat').style.display = 'none'; }
-        function cancelEdit() { window.editingId = null; document.getElementById('titleForm').innerText = "Novo Registo"; document.getElementById('inDesc').value = ''; document.getElementById('inVal').value = ''; document.getElementById('btnCancel').style.display = "none"; }
 
         function render() {
             const listDiv = document.getElementById('list'); 
-            const selMes = document.querySelector('.selMes').value;
-            const selAno = document.querySelector('.selAno').value;
-            
-            let globalTotalJ = 0, globalTotalT = 0, globalPayJ = 0, globalPayT = 0;
-            let filteredTotalJ = 0, filteredTotalT = 0, filteredPayJ = 0, filteredPayT = 0;
+            const selMes = document.querySelector('.selMes')?.value || "all";
+            const selAno = document.querySelector('.selAno')?.value || "all";
+            let gTJ=0, gTT=0, gPJ=0, gPT=0, fTJ=0, fTT=0, fPJ=0, fPT=0;
             let count = 0;
-            
+
             if(listDiv) listDiv.innerHTML = '';
 
             window.registros.forEach(r => {
-                const parts = r.date.split('-');
-                const rAno = parts[0];
-                const rMes = parseInt(parts[1]).toString();
+                const p = r.date.split('-');
+                const rA = p[0], rM = parseInt(p[1]).toString();
 
-                if(r.type==='EXP') { if(r.quem==='Joana') globalTotalJ+=r.val; else globalTotalT+=r.val; }
-                else { if(r.quem==='Joana') globalPayJ+=r.val; else globalPayT+=r.val; }
+                if(r.type==='EXP') { if(r.quem==='Joana') gTJ+=r.val; else gTT+=r.val; }
+                else { if(r.quem==='Joana') gPJ+=r.val; else gPT+=r.val; }
 
-                const matchMes = (selMes === "all" || rMes === selMes);
-                const matchAno = (selAno === "all" || rAno === selAno);
-
-                if(matchMes && matchAno) {
-                    if(r.type==='EXP') { if(r.quem==='Joana') filteredTotalJ+=r.val; else filteredTotalT+=r.val; }
-                    else { if(r.quem==='Joana') filteredPayJ+=r.val; else filteredPayT+=r.val; }
-
+                if((selMes==="all" || rM===selMes) && (selAno==="all" || rA===selAno)) {
+                    if(r.type==='EXP') { if(r.quem==='Joana') fTJ+=r.val; else fTT+=r.val; }
+                    else { if(r.quem==='Joana') fPJ+=r.val; else fPT+=r.val; }
+                    
                     if(listDiv) {
                         count++;
+                        const borderCls = r.type==='PAY'?'bg-pay':(r.quem==='Joana'?'bg-j':'bg-t');
                         listDiv.innerHTML += `
-                        <div class="item ${r.type==='PAY'?'pay':(r.quem==='Joana'?'exp-j':'exp-t')}">
-                            <div style="flex:1">
-                                <b style="display:block">${r.desc}</b>
-                                <small style="color:gray">${r.date} • ${r.quem} • ${r.val.toFixed(2)}€</small>
-                            </div>
-                            <button style="border:none;background:none;font-size:1.2rem;" onclick="editCloud('${r.id}')">✏️</button>
-                            <button style="border:none;background:none;font-size:1.2rem;" onclick="delCloud('${r.id}')">🗑️</button>
-                        </div>`;
+                            <div class="item">
+                                <div class="item-border ${borderCls}"></div>
+                                <div class="item-data">
+                                    <b>${r.desc}</b>
+                                    <small>${r.date} • ${r.quem}</small>
+                                </div>
+                                <div class="item-val">${r.val.toFixed(2)}€</div>
+                                <div class="actions">
+                                    <button class="btn-icon" onclick="editCloud('${r.id}')">✏️</button>
+                                    <button class="btn-icon" onclick="delCloud('${r.id}')">🗑️</button>
+                                </div>
+                            </div>`;
                     }
                 }
             });
 
-            if(listDiv && count === 0) listDiv.innerHTML = '<center style="color:gray;padding:20px;">Sem registos.</center>';
-            const countEl = document.getElementById('countReg');
-            if(countEl) countEl.innerText = count;
+            document.getElementById('dashJ').innerText = gTJ.toFixed(2) + "€";
+            document.getElementById('dashT').innerText = gTT.toFixed(2) + "€";
+            if(document.getElementById('countReg')) document.getElementById('countReg').innerText = count;
 
             const calc = (tj, tt, pj, pt) => (tj/2) - (tt/2) + pj - pt;
-            const ajuste = (window.config.dev25==='Toni' ? window.config.d25 : -window.config.d25);
-            const globalRes = calc(globalTotalJ, globalTotalT, globalPayJ, globalPayT) + ajuste;
+            const aj = (window.config.dev25==='Toni' ? window.config.d25 : -window.config.d25);
+            const resG = calc(gTJ, gTT, gPJ, gPT) + aj;
             
-            document.getElementById('valSaldoGlobal').innerText = Math.abs(globalRes).toFixed(2)+"€";
-            const msgG = document.getElementById('msgSaldoGlobal');
-            if(globalRes > 0.01) msgG.innerHTML = `Toni deve à <b class="text-j">Joana</b>`;
-            else if(globalRes < -0.01) msgG.innerHTML = `Joana deve ao <b class="text-t">Toni</b>`;
-            else msgG.innerText = "Tudo em dia! ✨";
+            document.getElementById('valSaldoGlobal').innerText = Math.abs(resG).toFixed(2)+"€";
+            const mG = document.getElementById('msgSaldoGlobal');
+            if(resG > 0.05) mG.innerHTML = `Toni deve à <b>Joana</b>`;
+            else if(resG < -0.05) mG.innerHTML = `Joana deve ao <b>Toni</b>`;
+            else mG.innerText = "Contas em dia!";
 
-            const periodRes = calc(filteredTotalJ, filteredTotalT, filteredPayJ, filteredPayT);
-            document.getElementById('valSaldoMes').innerText = Math.abs(periodRes).toFixed(2)+"€";
-            document.getElementById('msgSaldoMes').innerText = periodRes > 0.01 ? "Toni deve (este período)" : periodRes < -0.01 ? "Joana deve (este período)" : "Equilibrado";
+            const resM = calc(fTJ, fTT, fPJ, fPT);
+            document.getElementById('valSaldoMes').innerText = Math.abs(resM).toFixed(2)+"€";
+            document.getElementById('msgSaldoMes').innerText = resM > 0.05 ? "Neste período, Toni deve à Joana" : resM < -0.05 ? "Neste período, Joana deve ao Toni" : "Período equilibrado";
 
             if(document.getElementById('tab-analise').classList.contains('active')) updateCharts(selMes, selAno);
         }
 
         function updateCharts(selMes, selAno) {
             const exp = window.registros.filter(r => {
-                const parts = r.date.split('-');
-                return r.type === 'EXP' && (selMes === "all" || parseInt(parts[1]).toString() === selMes) && (selAno === "all" || parts[0] === selAno);
+                const p = r.date.split('-');
+                return r.type === 'EXP' && (selMes === "all" || parseInt(p[1]).toString() === selMes) && (selAno === "all" || p[0] === selAno);
             });
-            const catData = {}; exp.forEach(r => catData[r.desc] = (catData[r.desc] || 0) + r.val);
-            renderChart('chartCategorias', 'doughnut', Object.keys(catData), Object.values(catData), ['#ff7675', '#4a69bd', '#2ecc71', '#f1c40f', '#9b59b6']);
+            const cat = {}; exp.forEach(r => cat[r.desc] = (cat[r.desc] || 0) + r.val);
+            renderChart('chartCategorias', 'doughnut', Object.keys(cat), Object.values(cat), ['#ff7675', '#4a69bd', '#00b894', '#fdcb6e', '#6c5ce7', '#fab1a0']);
             let j = exp.filter(r => r.quem === 'Joana').reduce((s, r) => s + r.val, 0);
             let t = exp.filter(r => r.quem === 'Toni').reduce((s, r) => s + r.val, 0);
             renderChart('chartComparacao', 'pie', ['Joana', 'Toni'], [j, t], ['#ff7675', '#4a69bd']);
@@ -420,24 +473,26 @@
 
         function renderChart(id, type, labels, data, colors) {
             if(myCharts[id]) myCharts[id].destroy();
-            const canvas = document.getElementById(id);
-            if(!canvas) return;
-            myCharts[id] = new Chart(canvas.getContext('2d'), { type, data: { labels, datasets: [{ data, backgroundColor: colors }] }, options: { responsive: true, maintainAspectRatio: false } });
+            const ctx = document.getElementById(id).getContext('2d');
+            myCharts[id] = new Chart(ctx, { 
+                type, 
+                data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] }, 
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } 
+            });
         }
 
         function initSelects() {
-            const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+            const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
             const now = new Date();
             document.querySelectorAll('.selMes').forEach(s => {
-                s.innerHTML = '<option value="all">Todos os Meses</option>';
+                s.innerHTML = '<option value="all">Mês: Todos</option>';
                 meses.forEach((m, i) => s.add(new Option(m, (i + 1).toString(), false, (i+1) === (now.getMonth()+1))));
             });
             document.querySelectorAll('.selAno').forEach(s => {
-                s.innerHTML = '<option value="all">Todos os Anos</option>';
+                s.innerHTML = '<option value="all">Ano: Todos</option>';
                 [2024, 2025, 2026].forEach(a => s.add(new Option(a, a.toString(), false, a === now.getFullYear())));
             });
         }
-
         initSelects();
         document.getElementById('inDate').valueAsDate = new Date();
     </script>
