@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Joana & Toni - Cloud v9</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --joana: #ff7675; --toni: #4a69bd; --success: #2ecc71;
+            --bg: #f8f9fa; --card: #ffffff; --dark: #2f3542; --gray: #a4b0be; --danger: #ff4757;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, system-ui, sans-serif; }
+        body { background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--dark); overflow-x: hidden; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; padding: 12px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.08); z-index: 1000; }
+        .nav-item { flex: 1; border: none; background: none; color: var(--gray); display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; }
+        .nav-item.active { color: var(--toni); font-weight: bold; }
+        .nav-icon { font-size: 1.4rem; margin-bottom: 3px; }
+
+        .section { display: none; padding: 20px; animation: fadeIn 0.2s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--card); border-radius: 18px; padding: 18px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        h1 { font-size: 1.3rem; margin: 0 0 15px 0; }
+        h2 { font-size: 0.85rem; color: var(--gray); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Filtros */
+        .filter-row { display: flex; gap: 8px; margin-bottom: 15px; }
+        .filter-row select { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ddd; background: #fff; font-size: 0.9rem; }
+
+        .main-balance { background: var(--dark); color: white; border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .balance-val { font-size: 2.2rem; font-weight: 800; display: block; }
+        
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.8rem; font-weight: bold; color: var(--gray); margin-bottom: 5px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; background: #fff; }
+
+        .shortcuts-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .btn-short { background: #eee; border: none; padding: 8px 14px; border-radius: 20px; font-size: 0.75rem; color: var(--dark); cursor: pointer; }
+        .btn-short.delete-mode { background: #ffeaa7; border: 1px dashed var(--danger); color: var(--danger); }
+
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        .btn-save { background: var(--dark); color: white; margin-top: 10px; }
+        
+        .item { background: white; padding: 12px 15px; border-radius: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #ddd; }
+        .item.exp-j { border-left-color: var(--joana); }
+        .item.exp-t { border-left-color: var(--toni); }
+        .item.pay { border-left-color: var(--success); }
+        .item-info b { display: block; font-size: 0.95rem; }
+        .item-info small { color: var(--gray); font-size: 0.75rem; }
+        .action-btn { border: none; background: none; font-size: 1.2rem; padding: 5px; }
+
+        .text-j { color: var(--joana); }
+        .text-t { color: var(--toni); }
+        .chart-container { position: relative; height: 200px; width: 100%; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:2000; }
+    </style>
+</head>
+<body>
+
+    <!-- HOME -->
+    <div id="tab-home" class="section active">
+        <h1>Resumo de Contas 👫</h1>
+        
+        <div class="main-balance">
+            <div style="font-size: 0.7rem; opacity: 0.8; text-transform: uppercase;">Dívida Total Acumulada</div>
+            <span class="balance-val" id="valSaldoGlobal">0.00€</span>
+            <div id="msgSaldoGlobal" style="font-size: 0.9rem; margin-top: 5px;">A carregar...</div>
+        </div>
+
+        <div class="card">
+            <h2>Filtro de Visualização</h2>
+            <div class="filter-row">
+                <select class="selMes" onchange="syncFilters(this)"></select>
+                <select class="selAno" onchange="syncFilters(this)"></select>
+            </div>
+            <div style="text-align: center; border-top: 1px solid #eee; pt-10px; margin-top:10px;">
+                <label>Saldo do Período Selecionado:</label>
+                <span id="valSaldoMes" style="font-size: 1.5rem; font-weight: bold; display: block;">0.00€</span>
+                <small id="msgSaldoMes" style="color: var(--gray);"></small>
+            </div>
+        </div>
+
+        <div class="card">
+            <label>⚙️ Ajuste de Dívida Inicial (2025)</label>
+            <div style="display: flex; gap: 8px; margin-top:5px;">
+                <input type="number" id="cfgD25" onchange="updateCfgCloud()" placeholder="0.00">
+                <select id="cfgDev25" onchange="updateCfgCloud()">
+                    <option value="Joana">Joana deve</option>
+                    <option value="Toni">Toni deve</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANÁLISE -->
+    <div id="tab-analise" class="section">
+        <h1>Análise</h1>
+        <div class="filter-row">
+            <select class="selMes" onchange="syncFilters(this)"></select>
+            <select class="selAno" onchange="syncFilters(this)"></select>
+        </div>
+        <div class="card"><h2>Categorias</h2><div class="chart-container"><canvas id="chartCategorias"></canvas></div></div>
+        <div class="card"><h2>Joana vs Toni</h2><div class="chart-container"><canvas id="chartComparacao"></canvas></div></div>
+    </div>
+
+    <!-- NOVO -->
+    <div id="tab-novo" class="section">
+        <h1 id="titleForm">Novo Registo</h1>
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <label>Atalhos:</label>
+                <div><button onclick="openModalCat()" style="border:none; background:none; font-size:1.1rem;">➕</button>
+                <button onclick="toggleEditMode()" id="btnEditMode" style="border:none; background:none; font-size:1.1rem;">⚙️</button></div>
+            </div>
+            <div class="shortcuts-grid" id="shortcutsContainer"></div>
+        </div>
+        <div class="card">
+            <div class="form-group"><label>Tipo</label><select id="inType"><option value="EXP">Despesa (50/50)</option><option value="PAY">Pagamento (Acerto)</option></select></div>
+            <div class="form-group"><label>Data</label><input type="date" id="inDate"></div>
+            <div class="form-group"><label>Descrição</label><input type="text" id="inDesc" placeholder="Ex: Lidl" list="descSugestoes"><datalist id="descSugestoes"></datalist></div>
+            <div class="form-group"><label>Valor (€)</label><input type="number" id="inVal" placeholder="0.00" step="0.01"></div>
+            <div class="form-group"><label>Quem pagou?</label><select id="inQuem"><option value="Joana">Joana</option><option value="Toni">Toni</option></select></div>
+            <button class="btn btn-save" onclick="saveToCloud()">Gravar na Cloud</button>
+            <button id="btnCancel" onclick="cancelEdit()" style="display:none; width:100%; margin-top:10px; border:none; background:none; color:var(--danger);">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- LISTA -->
+    <div id="tab-hist" class="section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h1 style="margin:0;">Histórico</h1>
+            <span id="countReg" style="font-size: 0.8rem; color: var(--gray); background: #eee; padding: 2px 8px; border-radius: 10px;">0</span>
+        </div>
+        <div class="filter-row">
+            <select class="selMes" onchange="syncFilters(this)"></select>
+            <select class="selAno" onchange="syncFilters(this)"></select>
+        </div>
+        <div id="list">A carregar registos...</div>
+    </div>
+
+    <!-- MODAL CAT -->
+    <div id="modalCat" class="modal">
+        <div class="card" style="width: 85%;">
+            <h3>Novo Atalho</h3>
+            <input type="text" id="newCatName" placeholder="Ex: 🛒 Mercadona">
+            <div style="display:flex; gap:10px; margin-top:15px;"><button class="btn btn-save" onclick="addShortcutCloud()">Guardar</button><button class="btn" onclick="closeModalCat()">Sair</button></div>
+        </div>
+    </div>
+
+    <!-- NAV -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="nav('home', this)"><span class="nav-icon">📊</span>Home</button>
+        <button class="nav-item" onclick="nav('analise', this)"><span class="nav-icon">📈</span>Análise</button>
+        <button class="nav-item" onclick="nav('novo', this)"><span class="nav-icon">➕</span>Novo</button>
+        <button class="nav-item" onclick="nav('hist', this)"><span class="nav-icon">📜</span>Lista</button>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAO6gr87Mu3XRDtN2mGl7GjsutZ0Qw9bQ",
+            authDomain: "divisao-despesas.firebaseapp.com",
+            projectId: "divisao-despesas",
+            storageBucket: "divisao-despesas.firebasestorage.app",
+            messagingSenderId: "370376013970",
+            appId: "1:370376013970:web:9d1713e10ce41fbb4a4e4b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.registros = [];
+        window.config = { d25: 0, dev25: 'Toni' };
+        window.shortcuts = [];
+        window.editingId = null;
+
+        onSnapshot(query(collection(db, "registos"), orderBy("date", "desc")), (snap) => {
+            window.registros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            render();
+        });
+
+        onSnapshot(doc(db, "settings", "config"), (d) => {
+            if (d.exists()) {
+                window.config = d.data();
+                document.getElementById('cfgD25').value = window.config.d25;
+                document.getElementById('cfgDev25').value = window.config.dev25;
+                render();
+            }
+        });
+
+        onSnapshot(doc(db, "settings", "shortcuts"), (d) => {
+            window.shortcuts = d.exists() ? d.data().list : ["🏠 Casa", "🛒 Lidl", "💡 Luz"];
+            renderShortcuts();
+        });
+
+        window.saveToCloud = async () => {
+            const data = {
+                type: document.getElementById('inType').value,
+                date: document.getElementById('inDate').value,
+                desc: document.getElementById('inDesc').value,
+                val: parseFloat(document.getElementById('inVal').value),
+                quem: document.getElementById('inQuem').value
+            };
+            if(!data.date || !data.desc || isNaN(data.val)) return alert("Dados incompletos!");
+
+            if(window.editingId) {
+                await updateDoc(doc(db, "registos", window.editingId), data);
+                window.editingId = null;
+            } else {
+                await addDoc(collection(db, "registos"), data);
+            }
+            cancelEdit();
+            nav('hist', document.querySelectorAll('.nav-item')[3]);
+        };
+
+        window.delCloud = async (id) => {
+            if(confirm("Apagar?")) await deleteDoc(doc(db, "registos", id));
+        };
+
+        window.updateCfgCloud = async () => {
+            const newCfg = {
+                d25: parseFloat(document.getElementById('cfgD25').value) || 0,
+                dev25: document.getElementById('cfgDev25').value
+            };
+            await setDoc(doc(db, "settings", "config"), newCfg);
+        };
+
+        window.addShortcutCloud = async () => {
+            const name = document.getElementById('newCatName').value.trim();
+            if(name && !window.shortcuts.includes(name)) {
+                await setDoc(doc(db, "settings", "shortcuts"), { list: [...window.shortcuts, name] });
+                document.getElementById('newCatName').value = '';
+                closeModalCat();
+            }
+        };
+
+        window.removeShortcutCloud = async (name) => {
+            await setDoc(doc(db, "settings", "shortcuts"), { list: window.shortcuts.filter(s => s !== name) });
+        };
+
+        window.editCloud = (id) => {
+            const r = window.registros.find(x => x.id === id);
+            window.editingId = id;
+            document.getElementById('inType').value = r.type;
+            document.getElementById('inDate').value = r.date;
+            document.getElementById('inDesc').value = r.desc;
+            document.getElementById('inVal').value = r.val;
+            document.getElementById('inQuem').value = r.quem;
+            document.getElementById('titleForm').innerText = "Editar Registo";
+            document.getElementById('btnCancel').style.display = "block";
+            nav('novo', document.querySelectorAll('.nav-item')[2]);
+        };
+    </script>
+
+    <script>
+        let myCharts = {};
+
+        function nav(tab, el) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            el.classList.add('active');
+            if(tab === 'analise' || tab === 'hist' || tab === 'home') render();
+        }
+
+        // Sincroniza todos os seletores de mês/ano da página
+        function syncFilters(el) {
+            const isMes = el.classList.contains('selMes');
+            const val = el.value;
+            document.querySelectorAll(isMes ? '.selMes' : '.selAno').forEach(s => s.value = val);
+            render();
+        }
+
+        function renderShortcuts() {
+            const container = document.getElementById('shortcutsContainer');
+            if(!container) return;
+            container.innerHTML = '';
+            window.shortcuts.forEach(s => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-short' + (window.isEditMode ? ' delete-mode' : '');
+                btn.innerHTML = window.isEditMode ? `${s} ✕` : s;
+                btn.onclick = () => window.isEditMode ? window.removeShortcutCloud(s) : document.getElementById('inDesc').value = s;
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleEditMode() { window.isEditMode = !window.isEditMode; renderShortcuts(); }
+        function openModalCat() { document.getElementById('modalCat').style.display = 'flex'; }
+        function closeModalCat() { document.getElementById('modalCat').style.display = 'none'; }
+        function cancelEdit() { window.editingId = null; document.getElementById('titleForm').innerText = "Novo Registo"; document.getElementById('inDesc').value = ''; document.getElementById('inVal').value = ''; document.getElementById('btnCancel').style.display = "none"; }
+
+        function render() {
+            const listDiv = document.getElementById('list'); 
+            const selMes = document.querySelector('.selMes').value;
+            const selAno = document.querySelector('.selAno').value;
+            
+            let globalTotalJ = 0, globalTotalT = 0, globalPayJ = 0, globalPayT = 0;
+            let filteredTotalJ = 0, filteredTotalT = 0, filteredPayJ = 0, filteredPayT = 0;
+            let count = 0;
+            
+            if(listDiv) listDiv.innerHTML = '';
+
+            window.registros.forEach(r => {
+                // Parse manual da data para evitar erros de fuso horário (YYYY-MM-DD)
+                const parts = r.date.split('-');
+                const rAno = parts[0];
+                const rMes = parseInt(parts[1]).toString();
+
+                // Lógica Global (Para o card preto do topo)
+                if(r.type==='EXP') { if(r.quem==='Joana') globalTotalJ+=r.val; else globalTotalT+=r.val; }
+                else { if(r.quem==='Joana') globalPayJ+=r.val; else globalPayT+=r.val; }
+
+                // Lógica Filtrada (Para Lista, Gráficos e Balanço Mensal)
+                const matchMes = (selMes === "all" || rMes === selMes);
+                const matchAno = (selAno === "all" || rAno === selAno);
+
+                if(matchMes && matchAno) {
+                    if(r.type==='EXP') { if(r.quem==='Joana') filteredTotalJ+=r.val; else filteredTotalT+=r.val; }
+                    else { if(r.quem==='Joana') filteredPayJ+=r.val; else filteredPayT+=r.val; }
+
+                    if(listDiv) {
+                        count++;
+                        listDiv.innerHTML += `
+                        <div class="item ${r.type==='PAY'?'pay':(r.quem==='Joana'?'exp-j':'exp-t')}">
+                            <div class="item-info">
+                                <b>${r.desc}</b>
+                                <small>${r.date} • ${r.quem} • ${r.val.toFixed(2)}€</small>
+                            </div>
+                            <div>
+                                <button class="action-btn" onclick="editCloud('${r.id}')">✏️</button>
+                                <button class="action-btn" onclick="delCloud('${r.id}')">🗑️</button>
+                            </div>
+                        </div>`;
+                    }
+                }
+            });
+
+            if(listDiv && count === 0) listDiv.innerHTML = '<center style="color:gray;padding:20px;">Sem registos neste período.</center>';
+            document.getElementById('countReg').innerText = count;
+
+            const calc = (tj, tt, pj, pt) => (tj/2) - (tt/2) + pj - pt;
+            
+            // 1. Dívida Global (Tudo + Ajuste Inicial)
+            const ajuste = (window.config.dev25==='Toni' ? window.config.d25 : -window.config.d25);
+            const globalRes = calc(globalTotalJ, globalTotalT, globalPayJ, globalPayT) + ajuste;
+            
+            document.getElementById('valSaldoGlobal').innerText = Math.abs(globalRes).toFixed(2)+"€";
+            const msgG = document.getElementById('msgSaldoGlobal');
+            if(globalRes > 0.01) msgG.innerHTML = `Toni deve à <b class="text-j">Joana</b>`;
+            else if(globalRes < -0.01) msgG.innerHTML = `Joana deve ao <b class="text-t">Toni</b>`;
+            else msgG.innerText = "Tudo em dia! ✨";
+
+            // 2. Saldo do Período (Apenas o filtro)
+            const periodRes = calc(filteredTotalJ, filteredTotalT, filteredPayJ, filteredPayT);
+            document.getElementById('valSaldoMes').innerText = Math.abs(periodRes).toFixed(2)+"€";
+            const msgM = document.getElementById('msgSaldoMes');
+            if(periodRes > 0.01) msgM.innerText = "Toni deve à Joana (neste período)";
+            else if(periodRes < -0.01) msgM.innerText = "Joana deve ao Toni (neste período)";
+            else msgM.innerText = "Equilibrado";
+
+            if(document.getElementById('tab-analise').classList.contains('active')) updateCharts(selMes, selAno);
+        }
+
+        function updateCharts(selMes, selAno) {
+            const exp = window.registros.filter(r => {
+                const parts = r.date.split('-');
+                return r.type === 'EXP' && (selMes === "all" || parseInt(parts[1]).toString() === selMes) && (selAno === "all" || parts[0] === selAno);
+            });
+
+            const catData = {}; exp.forEach(r => catData[r.desc] = (catData[r.desc] || 0) + r.val);
+            renderChart('chartCategorias', 'doughnut', Object.keys(catData), Object.values(catData), ['#ff7675', '#4a69bd', '#2ecc71', '#f1c40f', '#9b59b6', '#74b9ff']);
+            
+            let j = exp.filter(r => r.quem === 'Joana').reduce((s, r) => s + r.val, 0);
+            let t = exp.filter(r => r.quem === 'Toni').reduce((s, r) => s + r.val, 0);
+            renderChart('chartComparacao', 'pie', ['Joana', 'Toni'], [j, t], ['#ff7675', '#4a69bd']);
+        }
+
+        function renderChart(id, type, labels, data, colors) {
+            if(myCharts[id]) myCharts[id].destroy();
+            const canvas = document.getElementById(id);
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            myCharts[id] = new Chart(ctx, { type, data: { labels, datasets: [{ data, backgroundColor: colors }] }, options: { responsive: true, maintainAspectRatio: false } });
+        }
+
+        // Inicialização dos Selects
+        function initSelects() {
+            const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+            const now = new Date();
+            const mAtual = (now.getMonth() + 1).toString();
+            const aAtual = now.getFullYear().toString();
+
+            document.querySelectorAll('.selMes').forEach(s => {
+                s.innerHTML = '<option value="all">Todos os Meses</option>';
+                meses.forEach((m, i) => {
+                    const opt = new Option(m, (i + 1).toString());
+                    if((i+1).toString() === mAtual) opt.selected = true;
+                    s.add(opt);
+                });
+            });
+
+            document.querySelectorAll('.selAno').forEach(s => {
+                s.innerHTML = '<option value="all">Todos os Anos</option>';
+                [2024, 2025, 2026].forEach(a => {
+                    const opt = new Option(a, a.toString());
+                    if(a.toString() === aAtual) opt.selected = true;
+                    s.add(opt);
+                });
+            });
+        }
+
+        initSelects();
+        document.getElementById('inDate').valueAsDate = new Date();
+    </script>
+</body>
+</html>
