@@ -280,7 +280,8 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        const emailsPermitidos = ["joana1589@gmail.com", "teu-email-toni@gmail.com"];
+        // EMAILS ATUALIZADOS AQUI
+        const emailsPermitidos = ["joana1589@gmail.com", "tonizito.alves92@gmail.com"];
 
         window.registros = [];
         window.config = { d25: 0, dev25: 'Toni' };
@@ -295,7 +296,8 @@
 
         onAuthStateChanged(auth, user => {
             if (user) {
-                if (emailsPermitidos.includes(user.email) || user.email.includes("joana1589")) {
+                if (emailsPermitidos.includes(user.email)) {
+                    document.getElementById("auth-msg").innerText = ""; 
                     document.getElementById("user-display").innerText = "Olá, " + user.displayName.split(' ')[0] + "!";
                     document.getElementById("auth-screen").style.display = "none";
                     document.getElementById("app-content").style.display = "block";
@@ -303,7 +305,7 @@
                     startListeners();
                 } else {
                     document.getElementById("auth-msg").innerText = "Acesso Negado: " + user.email;
-                    signOut(auth);
+                    setTimeout(() => { signOut(auth); }, 2500);
                 }
             } else {
                 document.getElementById("auth-screen").style.display = "flex";
