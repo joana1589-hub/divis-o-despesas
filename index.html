@@ -210,6 +210,7 @@
         .tag-t { background: var(--toni); color: white; }
         .item-val { font-weight: 800; font-size: 0.95rem; font-family: 'DM Mono', monospace; margin-left: 10px; white-space: nowrap; }
         .item-val.pay { color: var(--settle); }
+        .item-nota { font-size: 0.75rem; color: var(--gray); margin-top: 3px; font-style: italic; }
         .item-actions { display: flex; gap: 6px; margin-left: 10px; }
         .btn-icon { border: none; background: var(--bg); padding: 8px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; transition: background 0.15s; }
         .btn-icon:hover { background: var(--light-gray); }
@@ -466,6 +467,10 @@
                 <label>Descrição</label>
                 <input type="text" id="inDesc" placeholder="Ex: Compras Lidl, Renda...">
             </div>
+            <div class="form-group" id="notaGroup">
+                <label>📝 Nota (opcional)</label>
+                <input type="text" id="inNota" placeholder="Ex: a aguardar fatura, pago a 30 dias...">
+            </div>
             <div class="form-group">
                 <label>Valor (€)</label>
                 <input type="number" id="inVal" placeholder="0.00" step="0.01">
@@ -491,6 +496,12 @@
                     </div>
                     <div class="toggle-switch"></div>
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label>📎 Link do Documento (opcional)</label>
+                <input type="url" id="inLink" placeholder="Cola aqui o link do Google Drive...">
+                <p style="font-size:0.72rem;color:var(--gray);margin-top:6px;">Partilha a foto/fatura no Google Drive e cola o link aqui</p>
             </div>
 
             <button class="btn btn-save" id="btnSave" onclick="saveToCloud()">Gravar Registo</button>
@@ -629,6 +640,11 @@
             </div>
             <input type="hidden" id="obraQuem" value="Joana">
         </div>
+        <div class="form-group">
+            <label>📎 Link do Documento (opcional)</label>
+            <input type="url" id="obraLink" placeholder="Cola aqui o link do Google Drive...">
+            <p style="font-size:0.72rem;color:var(--gray);margin-top:6px;">Partilha a foto/fatura no Google Drive e cola o link aqui</p>
+        </div>
         <button class="btn" style="background:var(--obra);color:white;box-shadow:0 6px 20px rgba(230,126,34,0.3);margin-top:4px;" onclick="saveObra()">💾 Gravar</button>
         <button class="btn btn-cancel" onclick="closeObraModal()">Cancelar</button>
     </div>
@@ -708,7 +724,8 @@
             date:  document.getElementById('obraDate').value,
             desc:  document.getElementById('obraDesc').value.trim(),
             val:   parseFloat(document.getElementById('obraVal').value),
-            quem:  document.getElementById('obraQuem').value
+            quem:  document.getElementById('obraQuem').value,
+            link:  document.getElementById('obraLink').value.trim() || null
         };
         if (!data.date || !data.desc || isNaN(data.val) || data.val <= 0) return alert("Preenche todos os campos!");
         if (window.obraEditingId) {
@@ -735,6 +752,7 @@
         document.getElementById('obraDate').value = r.date;
         document.getElementById('obraDesc').value = r.desc;
         document.getElementById('obraVal').value = r.val;
+        document.getElementById('obraLink').value = r.link || '';
         selectObraQuem(r.quem);
         document.getElementById('obraModal').classList.add('open');
     };
@@ -748,7 +766,9 @@
             val: parseFloat(document.getElementById('inVal').value),
             quem: document.getElementById('inQuem').value,
             cat: cat || null,
-            recur: document.getElementById('inType').value === 'EXP' ? window._recurOn : false
+            recur: document.getElementById('inType').value === 'EXP' ? window._recurOn : false,
+            link: document.getElementById('inLink').value.trim() || null,
+            nota: document.getElementById('inNota').value.trim() || null
         };
         if (!data.date || !data.desc || isNaN(data.val) || data.val <= 0) return alert("Preenche todos os campos!");
         if (window.editingId) {
@@ -760,7 +780,7 @@
             showToast(data.type === 'PAY' ? "💸 Acerto registado!" : data.recur ? "🔁 Recorrente guardado!" : "✅ Despesa guardada");
         }
         cancelEdit();
-        nav('hist', document.querySelectorAll('.nav-item')[3]);
+        nav('hist', document.querySelector('.nav-item[onclick*="hist"]'));
     };
 
     window.saveSettle = async () => {
@@ -801,11 +821,13 @@
         document.getElementById('inDesc').value = r.desc;
         document.getElementById('inVal').value = r.val;
         document.getElementById('inQuem').value = r.quem;
+        document.getElementById('inLink').value = r.link || '';
+        document.getElementById('inNota').value = r.nota || '';
         if (r.cat) selectCat(r.cat);
         if (r.recur) { window._recurOn = true; document.getElementById('recurToggle').classList.add('on'); }
         document.getElementById('titleForm').innerText = "Editar Registo";
         document.getElementById('btnCancel').style.display = "block";
-        nav('novo', document.querySelectorAll('.nav-item')[2]);
+        nav('novo', document.querySelector('.nav-item[onclick*="novo"]'));
     };
 </script>
 
@@ -865,11 +887,13 @@
     let myCharts = {};
 
     function nav(tab, el) {
-        // all sections including obra
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => {
+            s.classList.remove('active');
+            s.style.display = '';
+        });
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         const target = document.getElementById('tab-' + tab);
-        if (target) { target.style.display = 'block'; target.classList.add('active'); }
+        if (target) target.classList.add('active');
         if (el) el.classList.add('active');
         if (tab === 'obra') { renderObra(); return; }
         render();
@@ -900,6 +924,8 @@
         document.getElementById('inDesc').value = '';
         document.getElementById('inVal').value = '';
         document.getElementById('inCat').value = '';
+        document.getElementById('inLink').value = '';
+        document.getElementById('inNota').value = '';
         document.getElementById('recurToggle').classList.remove('on');
         document.getElementById('btnCancel').style.display = "none";
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
@@ -945,14 +971,20 @@
         const settleTag = isSettle ? `<span class="tag tag-settle">Acerto</span>` : '';
         const recurTag  = isRecur  ? `<span class="tag tag-recur">🔁 Recorrente</span>` : '';
 
+        const notaLine = r.nota ? `<div class="item-nota">📝 ${escHtml(r.nota)}</div>` : '';
+
+        const linkBtn = r.link ? `<a href="${escHtml(r.link)}" target="_blank" class="btn-icon" title="Abrir documento" style="text-decoration:none;">📎</a>` : '';
+
         el.innerHTML = `
             <div class="item-icon">${icon}</div>
             <div class="item-data">
                 <div class="item-desc">${escHtml(r.desc)}</div>
                 <div class="item-meta">${r.date} ${personTag} ${settleTag} ${recurTag}</div>
+                ${notaLine}
             </div>
             <div class="item-val${isSettle ? ' pay' : ''}">${r.val.toFixed(2)}€</div>
             <div class="item-actions">
+                ${linkBtn}
                 <button class="btn-icon" onclick="editCloud('${r.id}')">✏️</button>
                 <button class="btn-icon" onclick="delCloud('${r.id}')">🗑️</button>
             </div>`;
@@ -1276,7 +1308,11 @@
     }
     window.openObraForm = openObraForm;
 
-    function closeObraModal() { document.getElementById('obraModal').classList.remove('open'); }
+    function closeObraModal() {
+        document.getElementById('obraModal').classList.remove('open');
+        document.getElementById('obraLink').value = '';
+        window.obraEditingId = null;
+    }
     window.closeObraModal = closeObraModal;
 
     document.getElementById('obraModal').addEventListener('click', e => {
@@ -1356,6 +1392,7 @@
             const el = document.createElement('div');
             el.className = 'item';
             el.style.borderLeft = '4px solid ' + (r.quem === 'Joana' ? 'var(--obra-j)' : r.quem === 'Toni' ? 'var(--obra-t)' : 'var(--obra-c)');
+            const linkBtn = r.link ? `<a href="${escHtml(r.link)}" target="_blank" class="btn-icon" title="Abrir documento" style="text-decoration:none;">📎</a>` : '';
             el.innerHTML = `
                 <div class="item-icon">${icon}</div>
                 <div class="item-data">
@@ -1364,6 +1401,7 @@
                 </div>
                 <div class="item-val" style="color:var(--obra);">${r.val.toFixed(2)}€</div>
                 <div class="item-actions">
+                    ${linkBtn}
                     <button class="btn-icon" onclick="editObra('${r.id}')">✏️</button>
                     <button class="btn-icon" onclick="delObra('${r.id}')">🗑️</button>
                 </div>`;
