@@ -667,6 +667,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    window._obraDB = db;
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
     const emailsPermitidos = ["joana1589@gmail.com", "tonizito.alves92@gmail.com"];
@@ -719,7 +720,11 @@
         });
     }
 
+    window._obraDB = null;
+
     window.saveObra = async () => {
+        const dbRef = window._obraDB;
+        if (!dbRef) return alert("Base de dados não carregada. Tenta novamente.");
         const data = {
             date:  document.getElementById('obraDate').value,
             desc:  document.getElementById('obraDesc').value.trim(),
@@ -728,26 +733,33 @@
             link:  document.getElementById('obraLink').value.trim() || null
         };
         if (!data.date || !data.desc || isNaN(data.val) || data.val <= 0) return alert("Preenche todos os campos!");
-        if (window.obraEditingId) {
-            await updateDoc(doc(db, "obra", window.obraEditingId), data);
-            window.obraEditingId = null;
-            showToast("✅ Registo de obra atualizado");
-        } else {
-            await addDoc(collection(db, "obra"), data);
-            showToast("🏡 Registo da Quinta Guarda guardado!");
+        try {
+            if (window.obraEditingId) {
+                await updateDoc(doc(dbRef, "obra", window.obraEditingId), data);
+                window.obraEditingId = null;
+                showToast("✅ Registo atualizado");
+            } else {
+                await addDoc(collection(dbRef, "obra"), data);
+                showToast("🏡 Registo da Quinta Guarda guardado!");
+            }
+            closeObraModal();
+        } catch(e) {
+            alert("Erro ao guardar: " + e.message);
         }
-        closeObraModal();
     };
 
     window.delObra = async (id) => {
-        if (confirm("Eliminar este registo de obra?")) {
-            await deleteDoc(doc(db, "obra", id));
+        const dbRef = window._obraDB;
+        if (!dbRef) return;
+        if (confirm("Eliminar este registo?")) {
+            await deleteDoc(doc(dbRef, "obra", id));
             showToast("🗑️ Eliminado");
         }
     };
 
     window.editObra = (id) => {
         const r = window.obraRegistos.find(x => x.id === id);
+        if (!r) return;
         window.obraEditingId = id;
         document.getElementById('obraDate').value = r.date;
         document.getElementById('obraDesc').value = r.desc;
