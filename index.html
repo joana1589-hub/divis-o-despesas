@@ -544,24 +544,15 @@
         <div id="list"></div>
     </div>
 
-    <!-- NAV -->
-    <nav class="bottom-nav" id="main-nav">
-        <button class="nav-item active" onclick="nav('home', this)"><span class="nav-icon">🏠</span>Casa</button>
-        <button class="nav-item" onclick="nav('analise', this)"><span class="nav-icon">📊</span>Análise</button>
-        <button class="nav-item" onclick="nav('novo', this)"><span class="nav-icon">➕</span>Novo</button>
-        <button class="nav-item" onclick="nav('hist', this)"><span class="nav-icon">📜</span>Lista</button>
-        <button class="nav-item obra-nav" onclick="nav('obra', this)"><span class="nav-icon">🏗️</span>Obra</button>
-    </nav>
-
-    <!-- OBRA TAB -->
+    <!-- QUINTA GUARDA TAB -->
     <div id="tab-obra" class="section">
         <div class="page-header">
-            <h1 class="page-title">🏗️ Obra</h1>
+            <h1 class="page-title">🏡 Quinta Guarda</h1>
             <button onclick="openObraForm()" style="background:var(--obra);color:white;border:none;padding:10px 16px;border-radius:12px;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;">+ Adicionar</button>
         </div>
 
         <div class="obra-header">
-            <div class="obra-header-label">Total Investido na Obra</div>
+            <div class="obra-header-label">Total Investido na Quinta Guarda</div>
             <div class="obra-total" id="obraTotalGeral">0.00€</div>
             <div class="obra-total-sub" id="obraDataRange">Sem registos ainda</div>
         </div>
@@ -612,13 +603,22 @@
         </div>
     </div>
 
+    <!-- NAV -->
+    <nav class="bottom-nav" id="main-nav">
+        <button class="nav-item active" onclick="nav('home', this)"><span class="nav-icon">🏠</span>Casa</button>
+        <button class="nav-item" onclick="nav('analise', this)"><span class="nav-icon">📊</span>Análise</button>
+        <button class="nav-item" onclick="nav('novo', this)"><span class="nav-icon">➕</span>Novo</button>
+        <button class="nav-item" onclick="nav('hist', this)"><span class="nav-icon">📜</span>Lista</button>
+        <button class="nav-item obra-nav" onclick="nav('obra', this)"><span class="nav-icon">🏡</span>Quinta Guarda</button>
+    </nav>
+
 </div>
 
-<!-- MODAL OBRA -->
+<!-- MODAL QUINTA GUARDA -->
 <div class="modal-overlay" id="obraModal">
     <div class="modal">
-        <div class="modal-title">🏗️ Registo de Obra</div>
-        <p class="modal-sub">Adiciona uma despesa da construção.</p>
+        <div class="modal-title">🏡 Registo — Quinta Guarda</div>
+        <p class="modal-sub">Adiciona uma despesa da Quinta Guarda.</p>
         <div class="form-group">
             <label>Data</label>
             <input type="date" id="obraDate">
@@ -734,7 +734,7 @@
             showToast("✅ Registo de obra atualizado");
         } else {
             await addDoc(collection(db, "obra"), data);
-            showToast("🏗️ Registo de obra guardado!");
+            showToast("🏡 Registo da Quinta Guarda guardado!");
         }
         closeObraModal();
     };
@@ -1383,7 +1383,7 @@
         // Lista
         const filtered = filtro === 'all' ? window.obraRegistos : window.obraRegistos.filter(r => r.quem === filtro);
         if (filtered.length === 0) {
-            list.innerHTML = '<div class="empty"><div class="empty-icon">🏗️</div><div class="empty-text">Sem registos de obra</div></div>';
+            list.innerHTML = '<div class="empty"><div class="empty-icon">🏡</div><div class="empty-text">Sem registos da Quinta Guarda</div></div>';
             return;
         }
         filtered.forEach(r => {
