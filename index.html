@@ -668,6 +668,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     window._obraDB = db;
+    window._obraDBReady = Promise.resolve(db);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
     const emailsPermitidos = ["joana1589@gmail.com", "tonizito.alves92@gmail.com"];
@@ -720,11 +721,8 @@
         });
     }
 
-    window._obraDB = null;
 
     window.saveObra = async () => {
-        const dbRef = window._obraDB;
-        if (!dbRef) return alert("Base de dados não carregada. Tenta novamente.");
         const data = {
             date:  document.getElementById('obraDate').value,
             desc:  document.getElementById('obraDesc').value.trim(),
@@ -734,6 +732,7 @@
         };
         if (!data.date || !data.desc || isNaN(data.val) || data.val <= 0) return alert("Preenche todos os campos!");
         try {
+            const dbRef = await window._obraDBReady;
             if (window.obraEditingId) {
                 await updateDoc(doc(dbRef, "obra", window.obraEditingId), data);
                 window.obraEditingId = null;
@@ -749,11 +748,14 @@
     };
 
     window.delObra = async (id) => {
-        const dbRef = window._obraDB;
-        if (!dbRef) return;
         if (confirm("Eliminar este registo?")) {
-            await deleteDoc(doc(dbRef, "obra", id));
-            showToast("🗑️ Eliminado");
+            try {
+                const dbRef = await window._obraDBReady;
+                await deleteDoc(doc(dbRef, "obra", id));
+                showToast("🗑️ Eliminado");
+            } catch(e) {
+                alert("Erro: " + e.message);
+            }
         }
     };
 
