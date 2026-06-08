@@ -1114,7 +1114,7 @@
             cta.classList.add('hidden');
         }
 
-        const resM = calcExp(fTJ, fTT) - fPT + fPJ;
+        const resM = calcExp(fTJ, fTT);
         document.getElementById('valSaldoMes').innerText = Math.abs(resM).toFixed(2) + "€";
         document.getElementById('msgSaldoMes').innerText = resM > 0.05 ? "Neste período, Toni deve à Joana"
             : resM < -0.05 ? "Neste período, Joana deve ao Toni" : "Período equilibrado ✓";
