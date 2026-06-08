@@ -1083,9 +1083,13 @@
         document.getElementById('dashJ').innerText = gTJ.toFixed(2) + "€";
         document.getElementById('dashT').innerText = gTT.toFixed(2) + "€";
 
-        const calc = (tj, tt, pj, pt) => (tj / 2) - (tt / 2) + pj - pt;
+        // Saldo calculado APENAS pelas despesas; acertos (PAY) abatam diretamente na dívida
+        const calcExp = (tj, tt) => (tj / 2) - (tt / 2);
         const aj   = window.config.dev25 === 'Toni' ? window.config.d25 : -window.config.d25;
-        const resG = calc(gTJ, gTT, gPJ, gPT) + aj;
+        // resG > 0 → Toni deve à Joana; resG < 0 → Joana deve ao Toni
+        // gPT = Toni transferiu para Joana (abate o que Toni devia)
+        // gPJ = Joana transferiu para Toni (abate o que Joana devia)
+        const resG = calcExp(gTJ, gTT) + aj - gPT + gPJ;
         window._currentBalance = resG;
 
         document.getElementById('valSaldoGlobal').innerText = Math.abs(resG).toFixed(2) + "€";
@@ -1110,7 +1114,7 @@
             cta.classList.add('hidden');
         }
 
-        const resM = calc(fTJ, fTT, fPJ, fPT);
+        const resM = calcExp(fTJ, fTT) - fPT + fPJ;
         document.getElementById('valSaldoMes').innerText = Math.abs(resM).toFixed(2) + "€";
         document.getElementById('msgSaldoMes').innerText = resM > 0.05 ? "Neste período, Toni deve à Joana"
             : resM < -0.05 ? "Neste período, Joana deve ao Toni" : "Período equilibrado ✓";
