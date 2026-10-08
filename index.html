@@ -968,8 +968,9 @@
             const targetYear = now.getFullYear();
             const targetMonth = now.getMonth() + 1;
 
-            // Compatibilidade com as despesas recorrentes antigas:
-            // cada registo antigo sem recurKey passa a ser uma série própria.
+            // Compatibilidade + proteção contra séries antigas que ficaram
+            // com a mesma recurKey. Cada despesa recorrente tem de ser uma
+            // série independente, mesmo que tenha a mesma descrição/valor.
             const groups = new Map();
             for (const r of recurring) {
                 let key = r.recurKey;
@@ -989,7 +990,49 @@
                 groups.get(key).push(r);
             }
 
-            for (const [key, records] of groups) {
+            // Se uma chave antiga contém mais do que uma ocorrência no mesmo
+            // mês, são séries diferentes que ficaram indevidamente agrupadas.
+            // Separa-as sem apagar nem alterar nenhum registo existente.
+            const repairedGroups = new Map();
+            for (const [key, rows] of groups) {
+                const byMonth = new Map();
+                rows.forEach(r => {
+                    const mk = r.date.slice(0, 7);
+                    if (!byMonth.has(mk)) byMonth.set(mk, []);
+                    byMonth.get(mk).push(r);
+                });
+
+                const hasCollision = [...byMonth.values()].some(list => list.length > 1);
+                if (!hasCollision) {
+                    repairedGroups.set(key, rows);
+                    continue;
+                }
+
+                // Mantém a chave no primeiro registo e cria uma chave nova
+                // para cada série adicional. A escolha é estável pelo ID.
+                const ordered = [...rows].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+                // A forma segura é reconstruir séries pela posição dentro de
+                // cada mês. Assim, duas despesas no mesmo mês nunca podem
+                // bloquear a criação uma da outra.
+                const maxSeries = Math.max(...[...byMonth.values()].map(list => list.length));
+                for (let idx = 0; idx < maxSeries; idx++) {
+                    const seriesRows = [];
+                    for (const list of [...byMonth.values()].sort((a,b) => a[0].date.localeCompare(b[0].date))) {
+                        if (list[idx]) seriesRows.push(list[idx]);
+                    }
+                    if (!seriesRows.length) continue;
+                    const seriesKey = idx === 0 ? key : (makeRecurKey());
+                    for (const r of seriesRows) {
+                        if (r.recurKey !== seriesKey) {
+                            await updateDoc(doc(db, "registos", r.id), { recurKey: seriesKey });
+                            r.recurKey = seriesKey;
+                        }
+                    }
+                    repairedGroups.set(seriesKey, seriesRows);
+                }
+            }
+
+            for (const [key, records] of repairedGroups) {
                 // Ordena cronologicamente. O último registo existente é a
                 // referência do valor mais recente.
                 records.sort((a, b) => a.date.localeCompare(b.date));
@@ -1018,8 +1061,8 @@
                         if (previous) {
                             const newDate = occurrenceDate(cursorYear, cursorMonth, anchorDay);
 
-                            // ID determinístico = impossível criar duas ocorrências
-                            // do mesmo mês, mesmo com dois dispositivos abertos.
+                            // ID determinístico: não cria duas ocorrências do
+                            // mesmo mês dentro da mesma série.
                             const deterministicId = `${key}-${mk}`;
                             const newRef = doc(db, "registos", deterministicId);
 
