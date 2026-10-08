@@ -9,7 +9,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Finanças">
-    <link rel="manifest" href="#" id="manifest-link">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SheetJS para exportar Excel -->
@@ -586,7 +588,7 @@
 
         <div class="card">
             <div class="card-title">⚖️ Balanço Individual</div>
-            <p style="font-size:0.78rem;color:var(--gray);margin-bottom:14px;">Dos valores pagos individualmente (excluindo conjunto), quem contribuiu mais?</p>
+            <p style="font-size:0.78rem;color:var(--gray);margin-bottom:14px;">Divisão 50/50 dos valores pagos individualmente (o que foi pago em conjunto já está dividido).</p>
             <div class="obra-balance-card">
                 <div class="obra-balance-row">
                     <div>
@@ -660,11 +662,22 @@
     </div>
 </div>
 
+<!-- MODAL ELIMINAR RECORRENTE -->
+<div class="modal-overlay" id="delRecurModal">
+    <div class="modal">
+        <div class="modal-title">🔁 Eliminar despesa recorrente</div>
+        <p class="modal-sub">Esta despesa faz parte de uma série mensal. Os meses anteriores não são alterados.</p>
+        <button class="btn btn-save" onclick="confirmDelRecur('one')">Eliminar só este mês</button>
+        <button class="btn" style="background:var(--danger);color:white;margin-top:10px;" onclick="confirmDelRecur('end')">Eliminar este e os seguintes (terminar série)</button>
+        <button class="btn btn-cancel" onclick="confirmDelRecur('cancel')">Cancelar</button>
+    </div>
+</div>
+
 <!-- FIREBASE -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc, setDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCAO6gr87Mu3XRDtN2mGl7GjsutZ0Qw9bQ",
@@ -681,16 +694,28 @@
     window._obraDBReady = Promise.resolve(db);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
-    window._fb = { db, doc, collection, addDoc, updateDoc, deleteDoc, setDoc };
+    window._fb = { db, doc, collection, addDoc, updateDoc, deleteDoc, setDoc, query, where, getDocs };
     const emailsPermitidos = ["joana1589@gmail.com", "tonizito.alves92@gmail.com"];
 
     window.registros = [];
     window.config = { d25: 0, dev25: 'Toni' };
     window._currentBalance = 0;
 
-    window.loginGoogle = () => signInWithPopup(auth, provider).catch(err => {
+    // Na app instalada (modo standalone) os popups costumam falhar,
+    // por isso usa-se o login por redirecionamento.
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    getRedirectResult(auth).catch(err => {
         document.getElementById("auth-msg").innerText = "Erro: " + err.message;
     });
+    window.loginGoogle = () => {
+        if (isStandalone) return signInWithRedirect(auth, provider);
+        return signInWithPopup(auth, provider).catch(err => {
+            if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
+                return signInWithRedirect(auth, provider);
+            }
+            document.getElementById("auth-msg").innerText = "Erro: " + err.message;
+        });
+    };
     window.logout = () => signOut(auth).then(() => location.reload());
 
     onAuthStateChanged(auth, user => {
@@ -720,14 +745,6 @@
             // A ocorrência de cada mês é um registo independente, pelo que
             // o valor pode ser alterado sem alterar meses anteriores.
             await ensureRecurringOccurrences();
-            // Verificação final: garante também a próxima ocorrência de cada
-            // série existente, incluindo recorrentes criadas antes desta versão.
-            for (const r of [...window.registros]) {
-                if (r.type === 'EXP' && r.recur === true && r.recurKey) {
-                    try { await ensureNextRecurringOccurrence(r); }
-                    catch (e) { console.error('Erro ao garantir recorrente:', r.id, e); }
-                }
-            }
         });
         onSnapshot(doc(db, "settings", "config"), d => {
             if (d.exists()) {
@@ -821,10 +838,11 @@
                     data.recurKey = old?.recurKey || makeRecurKey();
                     data.recurDay = old?.recurDay || parseInt(date.slice(8,10), 10);
                 } else {
-                    // Se o utilizador desligar a recorrência nesta ocorrência,
-                    // ela deixa de fazer parte da série, sem apagar informação.
-                    data.recurKey = null;
-                    data.recurDay = null;
+                    // Desligar a recorrência numa ocorrência TERMINA a série:
+                    // mantém a recurKey para que o gerador saiba que a série
+                    // acabou aqui e não volte a criar os meses seguintes.
+                    data.recurKey = old?.recurKey || null;
+                    data.recurDay = old?.recurDay || null;
                 }
                 await updateDoc(doc(db, "registos", window.editingId), data);
                 window.editingId = null;
@@ -834,19 +852,9 @@
                     data.recurKey = makeRecurKey();
                     data.recurDay = parseInt(date.slice(8,10), 10);
                 }
-                const newDocRef = await addDoc(collection(db, "registos"), data);
-
-                // Se foi criada uma nova recorrente, garante imediatamente a
-                // ocorrência do mês seguinte (sem depender de o listener
-                // Firestore já ter atualizado window.registros).
-                if (isRecur && data.recurKey) {
-                    try {
-                        const baseRecord = { id: newDocRef.id, ...data };
-                        await ensureNextRecurringOccurrence(baseRecord);
-                    } catch (recurErr) {
-                        console.error("Erro ao criar a próxima recorrência:", recurErr);
-                    }
-                }
+                await addDoc(collection(db, "registos"), data);
+                // As ocorrências em falta (até ao mês atual) são criadas pelo
+                // listener através de ensureRecurringOccurrences().
 
                 showToast(data.type === 'PAY' ? "💸 Acerto registado!" : data.recur ? "🔁 Recorrente guardado!" : "✅ Despesa guardada");
             }
@@ -861,9 +869,42 @@
     window.saveSettle = async () => { openAcertoFromBalance(); };
 
     window.delCloud = async (id) => {
+        const r = window.registros.find(x => x.id === id);
+        if (r && r.type === 'EXP' && r.recurKey) {
+            window._delRecurId = id;
+            document.getElementById('delRecurModal').classList.add('open');
+            return;
+        }
         if (confirm("Eliminar este registo?")) {
             await deleteDoc(doc(db, "registos", id));
             showToast("🗑️ Registo eliminado");
+        }
+    };
+
+    // Eliminar uma ocorrência recorrente. Em vez de apagar o documento,
+    // fica um marcador (type: 'SKIP') para o gerador saber que esse mês foi
+    // eliminado de propósito e não o voltar a criar.
+    window.confirmDelRecur = async (mode) => {
+        const id = window._delRecurId;
+        window._delRecurId = null;
+        document.getElementById('delRecurModal').classList.remove('open');
+        const r = window.registros.find(x => x.id === id);
+        if (!r || mode === 'cancel') return;
+        try {
+            const marker = { type: 'SKIP', date: r.date, recurKey: r.recurKey, recur: false };
+            if (mode === 'one') {
+                await setDoc(doc(db, "registos", id), marker);
+                showToast("🗑️ Eliminado só este mês");
+            } else {
+                const later = window.registros.filter(x =>
+                    x.id !== id && x.recurKey === r.recurKey && (x.date || '') > r.date);
+                for (const x of later) await deleteDoc(doc(db, "registos", x.id));
+                await setDoc(doc(db, "registos", id), { ...marker, ended: true });
+                showToast("⏹️ Série recorrente terminada");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Erro ao eliminar: " + e.message);
         }
     };
 
@@ -900,6 +941,13 @@
 </script>
 
 <script>
+    // Data de hoje no fuso horário local (valueAsDate usa UTC e, perto da
+    // meia-noite, mostrava o dia anterior).
+    function todayISO() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
     // ═══ CATEGORIAS ═══
     const CATS = [
         { id: 'supermercado', icon: '🛒', label: 'Supermercado' },
@@ -977,179 +1025,82 @@
         return `${year}-${String(month).padStart(2, '0')}-${String(safeDay).padStart(2, '0')}`;
     }
 
-    async function ensureNextRecurringOccurrence(base) {
-        if (!base || base.type !== 'EXP' || base.recur !== true || !base.recurKey || !base.date) return;
-
-        const [baseYear, baseMonth] = base.date.slice(0, 7).split('-').map(Number);
-        const next = nextMonth(baseYear, baseMonth);
-        const anchorDay = parseInt(base.recurDay, 10) || parseInt(base.date.slice(8, 10), 10) || 1;
-        const targetDate = occurrenceDate(next.year, next.month, anchorDay);
-        const targetMonthKey = targetDate.slice(0, 7);
-
-        // Vai diretamente ao Firestore. Isto é importante porque, no momento
-        // em que se grava uma nova recorrente, o onSnapshot ainda pode não ter
-        // recebido o novo documento e window.registros pode estar desatualizado.
-        const q = query(collection(db, 'registos'), where('recurKey', '==', base.recurKey));
-        const snap = await getDocs(q);
-        const alreadyThere = snap.docs.some(d => {
-            const r = d.data();
-            return r.type === 'EXP' && r.recur === true && (r.date || '').slice(0, 7) === targetMonthKey;
-        });
-        if (alreadyThere) return;
-
-        // ID determinístico por série + mês: mesmo que o listener corra ao
-        // mesmo tempo, nunca criamos duas ocorrências para o mesmo mês.
-        const deterministicId = `${base.recurKey}-${targetMonthKey}`;
-        const newRef = doc(db, 'registos', deterministicId);
-        const newData = {
-            type: 'EXP',
-            date: targetDate,
-            desc: base.desc,
-            val: Number(base.val),
-            quem: base.quem,
-            cat: base.cat || null,
-            recur: true,
-            recurKey: base.recurKey,
-            recurDay: anchorDay,
-            link: base.link || null,
-            nota: base.nota || null
-        };
-        await setDoc(newRef, newData, { merge: false });
-    }
-
+    // NOTA: este bloco está num <script> normal (não-módulo), por isso NÃO tem
+    // acesso aos imports do Firebase do script módulo. Usa sempre window._fb.
     async function ensureRecurringOccurrences() {
-        if (window._creatingRecurring || !Array.isArray(window.registros) || !window.registros.length) return;
+        if (window._creatingRecurring || !window._fb || !Array.isArray(window.registros) || !window.registros.length) return;
+        const { db, doc, setDoc, updateDoc } = window._fb;
 
-        const recurring = window.registros.filter(r => r.type === 'EXP' && r.recur === true);
-        if (!recurring.length) return;
+        // Inclui todas as despesas que pertencem a uma série (mesmo as que
+        // tiveram a recorrência desligada — essas marcam o fim da série).
+        const series = window.registros.filter(r => r.date && (
+            (r.type === 'EXP' && (r.recur === true || r.recurKey)) ||
+            (r.type === 'SKIP' && r.recurKey)));
+        if (!series.some(r => r.recur === true)) return;
 
         window._creatingRecurring = true;
         try {
             const now = new Date();
-            const targetYear = now.getFullYear();
-            const targetMonth = now.getMonth() + 1;
+            const targetMk = monthKey(now.getFullYear(), now.getMonth() + 1);
 
-            // Compatibilidade + proteção contra séries antigas que ficaram
-            // com a mesma recurKey. Cada despesa recorrente tem de ser uma
-            // série independente, mesmo que tenha a mesma descrição/valor.
             const groups = new Map();
-            for (const r of recurring) {
+            for (const r of series) {
                 let key = r.recurKey;
                 if (!key) {
+                    // Recorrentes antigas sem chave: cria uma série própria.
                     key = 'legacy-' + r.id;
-                    const day = parseInt((r.date || '').slice(8, 10), 10) || 1;
-                    await updateDoc(doc(db, "registos", r.id), {
-                        recurKey: key,
-                        recurDay: day
-                    });
+                    const day = parseInt(r.date.slice(8, 10), 10) || 1;
+                    await updateDoc(doc(db, "registos", r.id), { recurKey: key, recurDay: day });
                     r.recurKey = key;
                     r.recurDay = day;
-                } else if (!r.recurDay) {
-                    r.recurDay = parseInt((r.date || '').slice(8, 10), 10) || 1;
                 }
                 if (!groups.has(key)) groups.set(key, []);
                 groups.get(key).push(r);
             }
 
-            // Se uma chave antiga contém mais do que uma ocorrência no mesmo
-            // mês, são séries diferentes que ficaram indevidamente agrupadas.
-            // Separa-as sem apagar nem alterar nenhum registo existente.
-            const repairedGroups = new Map();
-            for (const [key, rows] of groups) {
-                const byMonth = new Map();
-                rows.forEach(r => {
-                    const mk = r.date.slice(0, 7);
-                    if (!byMonth.has(mk)) byMonth.set(mk, []);
-                    byMonth.get(mk).push(r);
-                });
-
-                const hasCollision = [...byMonth.values()].some(list => list.length > 1);
-                if (!hasCollision) {
-                    repairedGroups.set(key, rows);
-                    continue;
-                }
-
-                // Mantém a chave no primeiro registo e cria uma chave nova
-                // para cada série adicional. A escolha é estável pelo ID.
-                const ordered = [...rows].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
-                // A forma segura é reconstruir séries pela posição dentro de
-                // cada mês. Assim, duas despesas no mesmo mês nunca podem
-                // bloquear a criação uma da outra.
-                const maxSeries = Math.max(...[...byMonth.values()].map(list => list.length));
-                for (let idx = 0; idx < maxSeries; idx++) {
-                    const seriesRows = [];
-                    for (const list of [...byMonth.values()].sort((a,b) => a[0].date.localeCompare(b[0].date))) {
-                        if (list[idx]) seriesRows.push(list[idx]);
-                    }
-                    if (!seriesRows.length) continue;
-                    const seriesKey = idx === 0 ? key : (makeRecurKey());
-                    for (const r of seriesRows) {
-                        if (r.recurKey !== seriesKey) {
-                            await updateDoc(doc(db, "registos", r.id), { recurKey: seriesKey });
-                            r.recurKey = seriesKey;
-                        }
-                    }
-                    repairedGroups.set(seriesKey, seriesRows);
-                }
-            }
-
-            for (const [key, records] of repairedGroups) {
-                // Ordena cronologicamente. O último registo existente é a
-                // referência do valor mais recente.
-                records.sort((a, b) => a.date.localeCompare(b.date));
-
+            for (const [key, records] of groups) {
+                records.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
                 const first = records[0];
-                const anchorDay = parseInt(first.recurDay, 10) || parseInt(first.date.slice(8,10), 10) || 1;
+                const anchorDay = parseInt(first.recurDay, 10) || parseInt(first.date.slice(8, 10), 10) || 1;
+                const existing = new Set(records.map(r => r.date.slice(0, 7)));
 
-                const existingByMonth = new Map();
-                records.forEach(r => {
-                    existingByMonth.set(r.date.slice(0, 7), r);
-                });
+                let y = parseInt(first.date.slice(0, 4), 10);
+                let m = parseInt(first.date.slice(5, 7), 10);
 
-                let cursorYear = parseInt(first.date.slice(0, 4), 10);
-                let cursorMonth = parseInt(first.date.slice(5, 7), 10);
+                while (monthKey(y, m) <= targetMk) {
+                    const mk = monthKey(y, m);
+                    if (!existing.has(mk)) {
+                        const prior = records.filter(r => r.date.slice(0, 7) < mk);
+                        const last = prior[prior.length - 1];
+                        if (!last) break;
+                        // Série terminada: marcador "terminar série" ou recorrência desligada.
+                        if (last.type === 'SKIP' && last.ended) break;
+                        if (last.type === 'EXP' && last.recur !== true) break;
+                        // Copia a ocorrência real mais recente (ignora meses eliminados).
+                        const previous = prior.filter(r => r.type === 'EXP' && r.recur === true).pop();
+                        if (!previous) break;
 
-                // Não cria ocorrências anteriores à data original.
-                while (cursorYear < targetYear || (cursorYear === targetYear && cursorMonth <= targetMonth)) {
-                    const mk = monthKey(cursorYear, cursorMonth);
-
-                    if (!existingByMonth.has(mk)) {
-                        // Usa a ocorrência existente mais recente anterior a este mês.
-                        const previous = records
-                            .filter(r => r.date.slice(0, 7) < mk)
-                            .sort((a, b) => b.date.localeCompare(a.date))[0];
-
-                        if (previous) {
-                            const newDate = occurrenceDate(cursorYear, cursorMonth, anchorDay);
-
-                            // ID determinístico: não cria duas ocorrências do
-                            // mesmo mês dentro da mesma série.
-                            const deterministicId = `${key}-${mk}`;
-                            const newRef = doc(db, "registos", deterministicId);
-
-                            const newData = {
-                                type: 'EXP',
-                                date: newDate,
-                                desc: previous.desc,
-                                val: Number(previous.val),
-                                quem: previous.quem,
-                                cat: previous.cat || null,
-                                recur: true,
-                                recurKey: key,
-                                recurDay: anchorDay,
-                                link: previous.link || null,
-                                nota: previous.nota || null
-                            };
-
-                            await setDoc(newRef, newData, { merge: false });
-                            existingByMonth.set(mk, { id: deterministicId, ...newData });
-                            records.push({ id: deterministicId, ...newData });
-                        }
+                        const newData = {
+                            type: 'EXP',
+                            date: occurrenceDate(y, m, anchorDay),
+                            desc: previous.desc,
+                            val: Number(previous.val),
+                            quem: previous.quem,
+                            cat: previous.cat || null,
+                            recur: true,
+                            recurKey: key,
+                            recurDay: anchorDay,
+                            link: previous.link || null,
+                            nota: previous.nota || null
+                        };
+                        // ID determinístico: nunca cria duas ocorrências do mesmo mês.
+                        const id = `${key}-${mk}`;
+                        await setDoc(doc(db, "registos", id), newData);
+                        existing.add(mk);
+                        records.push({ id, ...newData });
+                        records.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
                     }
-
-                    const n = nextMonth(cursorYear, cursorMonth);
-                    cursorYear = n.year;
-                    cursorMonth = n.month;
+                    const n = nextMonth(y, m); y = n.year; m = n.month;
                 }
             }
         } catch (e) {
@@ -1158,6 +1109,7 @@
             window._creatingRecurring = false;
         }
     }
+    window.ensureRecurringOccurrences = ensureRecurringOccurrences;
 
     // ═══ ACERTOS ═══
     window.editingAcertoId = null;
@@ -1191,7 +1143,7 @@
         document.getElementById('acertoQuem').value = quem;
         document.getElementById('acertoPara').value = para;
         document.getElementById('acertoVal').value = Math.abs(bal).toFixed(2);
-        document.getElementById('acertoDate').valueAsDate = new Date();
+        document.getElementById('acertoDate').value = todayISO();
         syncAcertoDirection();
         nav('acertos', document.querySelector('.nav-item[onclick*="acertos"]'));
     }
@@ -1202,7 +1154,7 @@
         document.getElementById('titleAcertoForm').innerText = 'Novo Acerto';
         document.getElementById('btnSaveAcerto').innerText = '💾 Registar Acerto';
         document.getElementById('btnCancelAcerto').style.display = 'none';
-        document.getElementById('acertoDate').valueAsDate = new Date();
+        document.getElementById('acertoDate').value = todayISO();
         document.getElementById('acertoQuem').value = 'Toni';
         document.getElementById('acertoPara').value = 'Joana';
         document.getElementById('acertoVal').value = '';
@@ -1359,6 +1311,7 @@
         document.getElementById('inCat').value = '';
         document.getElementById('inLink').value = '';
         document.getElementById('inNota').value = '';
+        document.getElementById('inDate').value = todayISO();
         document.getElementById('recurToggle').classList.remove('on');
         document.getElementById('btnCancel').style.display = "none";
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
@@ -1553,6 +1506,7 @@
         const selMes = document.querySelector('.selMes')?.value || "all";
         const selAno = document.querySelector('.selAno')?.value || "all";
         return window.registros.filter(r => {
+            if (r.type !== 'EXP' && r.type !== 'PAY') return false;
             const p = r.date.split('-');
             return (selMes === "all" || parseInt(p[1]).toString() === selMes) && (selAno === "all" || p[0] === selAno);
         });
@@ -1569,10 +1523,12 @@
             'Quem': r.quem,
             'Para': r.type === 'PAY' ? getPayDirection(r) : '',
             'Valor (€)': r.val,
-            'Recorrente': r.recur ? 'Sim' : 'Não'
+            'Recorrente': r.recur ? 'Sim' : 'Não',
+            'Nota': r.nota || '',
+            'Link': r.link || ''
         }));
         const ws = XLSX.utils.json_to_sheet(data);
-        ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 28 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
+        ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 28 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 30 }, { wch: 40 }];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Finanças");
         XLSX.writeFile(wb, `financas_joana_toni.xlsx`);
@@ -1663,34 +1619,27 @@
         document.getElementById('installBanner').classList.remove('show');
     });
 
-    // PWA Manifest dinâmico
-    const manifest = {
-        name: "Finanças da Casa",
-        short_name: "Finanças",
-        description: "Joana & Toni — Gestão de despesas partilhadas",
-        start_url: "./",
-        display: "standalone",
-        background_color: "#1a1d23",
-        theme_color: "#1a1d23",
-        icons: [{ src: "https://cdn-icons-png.flaticon.com/512/1170/1170678.png", sizes: "512x512", type: "image/png" }]
-    };
-    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-    document.getElementById('manifest-link').href = URL.createObjectURL(blob);
-
-    // Service Worker
+    // Service Worker (ficheiro sw.js na mesma pasta; precisa de HTTPS)
     if ('serviceWorker' in navigator) {
-        const swCode = `
-            const CACHE = 'financas-v1';
-            const ASSETS = ['./', 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap'];
-            self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).catch(()=>{}))));
-            self.addEventListener('fetch', e => {
-                if (e.request.url.includes('firebasejs') || e.request.url.includes('googleapis.com/identitytoolkit')) return;
-                e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-            });
-        `;
-        const swBlob = new Blob([swCode], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+        navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker não registado:', err));
     }
+
+    // iPhone/iPad não mostram o botão "Instalar": explica como adicionar ao ecrã.
+    (function iosInstallHint() {
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        const standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+        if (!isIOS || standalone) return;
+        try { if (localStorage.getItem('iosHintDismissed')) return; } catch (e) {}
+        const banner = document.getElementById('installBanner');
+        banner.querySelector('.install-banner-sub').innerText = 'No Safari: Partilhar ⬆️ → Adicionar ao ecrã principal';
+        const btn = document.getElementById('installBtn');
+        btn.innerText = 'OK';
+        btn.onclick = () => {
+            banner.classList.remove('show');
+            try { localStorage.setItem('iosHintDismissed', '1'); } catch (e) {}
+        };
+        banner.classList.add('show');
+    })();
 
     // ═══ SELECTS ═══
     function initSelects() {
@@ -1709,9 +1658,9 @@
         });
     }
     initSelects();
-    document.getElementById('inDate').valueAsDate = new Date();
-    document.getElementById('acertoDate').valueAsDate = new Date();
-    document.getElementById('obraDate').valueAsDate = new Date();
+    document.getElementById('inDate').value = todayISO();
+    document.getElementById('acertoDate').value = todayISO();
+    document.getElementById('obraDate').value = todayISO();
     syncAcertoDirection();
 
     // ═══ OBRA UI ═══
@@ -1720,7 +1669,7 @@
 
     function openObraForm() {
         window.obraEditingId = null;
-        document.getElementById('obraDate').valueAsDate = new Date();
+        document.getElementById('obraDate').value = todayISO();
         document.getElementById('obraDesc').value = '';
         document.getElementById('obraVal').value = '';
         selectObraQuem('Joana');
@@ -1773,13 +1722,14 @@
         // Data range
         if (window.obraRegistos.length > 0) {
             const dates = window.obraRegistos.map(r => r.date).sort();
-            document.getElementById('obraDataRange').innerText = `${dates[dates.length-1]} → ${dates[0]} · ${window.obraRegistos.length} registos`;
+            document.getElementById('obraDataRange').innerText = `${dates[0]} → ${dates[dates.length-1]} · ${window.obraRegistos.length} registos`;
         } else {
             document.getElementById('obraDataRange').innerText = 'Sem registos ainda';
         }
 
-        // Balanço individual (sem conjunto)
-        const diff = totJ - totT;
+        // Balanço individual (sem conjunto): a Quinta Guarda é de ambos (50/50),
+        // por isso para igualar basta transferir metade da diferença.
+        const diff = (totJ - totT) / 2;
         const balName = document.getElementById('obraBalName');
         const balVal  = document.getElementById('obraBalVal');
         const balStat = document.getElementById('obraBalStatus');
@@ -1791,12 +1741,12 @@
         } else if (diff > 0) {
             balName.innerText = '🔴 Joana pagou mais';
             balVal.innerText  = diff.toFixed(2) + '€';
-            balStat.innerText = 'Toni deve ' + diff.toFixed(2) + '€ a Joana (individualmente)';
+            balStat.innerText = 'Para ficarem iguais, Toni deve ' + diff.toFixed(2) + '€ a Joana';
             balVal.style.color = 'var(--obra-j)';
         } else {
             balName.innerText = '🔵 Toni pagou mais';
             balVal.innerText  = Math.abs(diff).toFixed(2) + '€';
-            balStat.innerText = 'Joana deve ' + Math.abs(diff).toFixed(2) + '€ ao Toni (individualmente)';
+            balStat.innerText = 'Para ficarem iguais, Joana deve ' + Math.abs(diff).toFixed(2) + '€ ao Toni';
             balVal.style.color = 'var(--obra-t)';
         }
 
