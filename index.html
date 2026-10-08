@@ -328,8 +328,8 @@
         .nav-item.wed-nav.active { color: var(--wed); background: rgba(196,69,105,0.08); }
         /* 7 separadores: mais compactos */
         .bottom-nav { padding: 0 4px; }
-        .nav-item { padding: 8px 2px; letter-spacing: 0.3px; font-size: 0.56rem; line-height: 1.15; text-align: center; min-width: 0; }
-        .nav-icon { font-size: 1.25rem; }
+        .nav-item { padding: 8px 1px; letter-spacing: 0; font-size: 0.52rem; line-height: 1.15; text-align: center; min-width: 0; }
+        .nav-icon { font-size: 1.2rem; }
 
         /* ═══ CASAMENTO ═══ */
         .wed-header { background: linear-gradient(135deg, #c44569 0%, #8e3a59 100%); border-radius: var(--radius); padding: 24px 22px; margin-bottom: 16px; color: white; box-shadow: 0 10px 30px rgba(196,69,105,0.3); }
@@ -386,6 +386,25 @@
         .wed-item-bottom .item-actions { margin-left: 0; gap: 4px; flex-shrink: 0; }
         .wed-item-bottom .btn-icon { padding: 6px 7px; font-size: 0.82rem; }
         .item-val.rec { color: var(--settle); }
+        .xls-badge { border: none; cursor: pointer; background: #e8f5e9; color: #1e7e45; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+        .nav-item.tudo-nav.active { color: var(--dark); background: rgba(26,29,35,0.07); }
+        /* ═══ TUDO ═══ */
+        .tudo-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+        .tudo-filters select, .tudo-filters input { padding: 10px 10px; font-size: 0.82rem; }
+        .tudo-filters .full { grid-column: 1 / -1; }
+        .tudo-sum { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 4px 0 10px; }
+        .tudo-sum div { background: var(--bg); border-radius: 12px; padding: 9px 8px; text-align: center; }
+        .tudo-sum span { display: block; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray); font-weight: 700; }
+        .tudo-sum b { font-family: 'DM Mono', monospace; font-size: 0.9rem; }
+        .tudo-people { font-size: 0.76rem; color: var(--gray); line-height: 1.55; }
+        .tudo-people b { color: var(--dark); font-family: 'DM Mono', monospace; }
+        .tudo-month { display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); margin: 16px 4px 8px; }
+        .tag-area-casa { background: #e8f0fc; color: #3b6fc4; }
+        .tag-area-acerto { background: var(--settle-bg); color: #1e8449; }
+        .tag-area-quinta { background: var(--obra-bg); color: var(--obra-dark); }
+        .tag-area-casamento { background: var(--wed-bg); color: var(--wed); }
+        .tag-c { background: var(--obra-c); color: white; }
+        .item-author { font-size: 0.7rem; color: var(--gray); margin-top: 4px; }
         .item-val.desp { color: var(--danger); }
     </style>
 </head>
@@ -489,7 +508,7 @@
         <!-- EXPORTAR -->
         <div class="card">
             <div class="card-title">📤 Exportar</div>
-            <p style="font-size:0.82rem;color:var(--gray);margin-bottom:14px;">Exporta os registos do período selecionado</p>
+            <p style="font-size:0.82rem;color:var(--gray);margin-bottom:14px;">Exporta as despesas e acertos da Casa do período selecionado (com resumo)</p>
             <div class="export-grid">
                 <button class="btn btn-export-xl" onclick="exportExcel()">📊 Excel</button>
                 <button class="btn btn-export-pdf" onclick="exportPDF()">📄 PDF</button>
@@ -569,7 +588,10 @@
     <div id="tab-acertos" class="section">
         <div class="page-header">
             <h1 class="page-title">💸 Acertos</h1>
-            <span class="user-badge" id="countAcertos">0</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <button onclick="exportAcertosExcel()" class="user-badge xls-badge">📊 Excel</button>
+                <span class="user-badge" id="countAcertos">0</span>
+            </div>
         </div>
 
         <div class="card">
@@ -666,7 +688,10 @@
     <div id="tab-obra" class="section">
         <div class="page-header">
             <h1 class="page-title">🏡 Quinta Guarda</h1>
-            <button onclick="openObraForm()" style="background:var(--obra);color:white;border:none;padding:10px 16px;border-radius:12px;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;">+ Adicionar</button>
+            <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+                <button onclick="exportObraExcel()" class="user-badge xls-badge">📊 Excel</button>
+                <button onclick="openObraForm()" style="background:var(--obra);color:white;border:none;padding:9px 12px;border-radius:12px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">+ Novo</button>
+            </div>
         </div>
 
         <div class="obra-header">
@@ -725,7 +750,7 @@
     <div id="tab-casamento" class="section">
         <div class="page-header">
             <h1 class="page-title">💍 Casamento</h1>
-            <button onclick="exportWedExcel()" class="user-badge" style="border:none;cursor:pointer;">📊 Excel</button>
+            <button onclick="exportWedExcel()" class="user-badge xls-badge">📊 Excel</button>
         </div>
 
         <div class="wed-header">
@@ -792,6 +817,48 @@
         <div id="wedList"></div>
     </div>
 
+    <!-- TUDO: todos os movimentos de todos os separadores -->
+    <div id="tab-tudo" class="section">
+        <div class="page-header">
+            <h1 class="page-title">🗂️ Tudo</h1>
+            <button onclick="exportTudoExcel()" class="user-badge xls-badge">📊 Excel</button>
+        </div>
+        <div class="card">
+            <div class="tudo-filters">
+                <input type="search" id="tudoSearch" class="full" placeholder="🔍 Pesquisar em tudo..." oninput="renderTudo()">
+                <select id="tudoArea" onchange="renderTudo()">
+                    <option value="all">Área: Todas</option>
+                    <option value="casa">🏠 Casa</option>
+                    <option value="acerto">💸 Acertos Casa</option>
+                    <option value="quinta">🏡 Quinta Guarda</option>
+                    <option value="casamento">💍 Casamento</option>
+                </select>
+                <select id="tudoPessoa" onchange="renderTudo()">
+                    <option value="all">Pessoa: Todas</option>
+                    <option value="Joana">Joana</option>
+                    <option value="Toni">Toni</option>
+                    <option value="Conjunto">Conjunto</option>
+                </select>
+                <select id="tudoMes" onchange="renderTudo()"></select>
+                <select id="tudoAno" onchange="renderTudo()"></select>
+                <select id="tudoAutor" onchange="renderTudo()" class="full">
+                    <option value="all">Registado por: Qualquer um</option>
+                    <option value="Joana">✍️ Registado pela Joana</option>
+                    <option value="Toni">✍️ Registado pelo Toni</option>
+                    <option value="Automático">🔁 Criado automaticamente</option>
+                    <option value="none">Sem informação (registos antigos)</option>
+                </select>
+            </div>
+            <div class="tudo-sum">
+                <div><span>Saídas</span><b id="tudoSaidas" class="neg">0.00€</b></div>
+                <div><span>Entradas</span><b id="tudoEntradas" class="pos">0.00€</b></div>
+                <div><span>Acertos</span><b id="tudoAcertos">0.00€</b></div>
+            </div>
+            <div class="tudo-people" id="tudoPeople"></div>
+        </div>
+        <div id="tudoList"></div>
+    </div>
+
     <!-- NAV -->
     <nav class="bottom-nav" id="main-nav">
         <button class="nav-item active" onclick="nav('home', this)"><span class="nav-icon">🏠</span>Casa</button>
@@ -801,6 +868,7 @@
         <button class="nav-item" onclick="nav('hist', this)"><span class="nav-icon">📜</span>Lista</button>
         <button class="nav-item obra-nav" onclick="nav('obra', this)"><span class="nav-icon">🏡</span>Quinta Guarda</button>
         <button class="nav-item wed-nav" onclick="nav('casamento', this)"><span class="nav-icon">💍</span>Casa&shy;mento</button>
+        <button class="nav-item tudo-nav" onclick="nav('tudo', this)"><span class="nav-icon">🗂️</span>Tudo</button>
     </nav>
 
 </div>
@@ -958,7 +1026,9 @@
     onAuthStateChanged(auth, user => {
         if (user) {
             if (emailsPermitidos.includes(user.email)) {
-                document.getElementById("user-display").innerText = "Olá, " + user.displayName.split(' ')[0] + "!";
+                window.currentUserName = user.email === "joana1589@gmail.com" ? "Joana" : "Toni";
+                const first = (user.displayName || window.currentUserName).split(' ')[0];
+                document.getElementById("user-display").innerText = "Olá, " + first + "!";
                 document.getElementById("auth-screen").style.display = "none";
                 document.getElementById("app-content").style.display = "block";
                 document.getElementById("main-nav").style.display = "flex";
@@ -977,7 +1047,9 @@
     function startListeners() {
         onSnapshot(query(collection(db, "registos"), orderBy("date", "desc")), async snap => {
             window.registros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            refreshYearOptions();
             render();
+            renderTudo();
             // Cria apenas as ocorrências mensais que estejam em falta.
             // A ocorrência de cada mês é um registo independente, pelo que
             // o valor pode ser alterado sem alterar meses anteriores.
@@ -994,12 +1066,16 @@
         // Obra listener — coleção separada, nunca toca nos "registos"
         onSnapshot(query(collection(db, "obra"), orderBy("date", "desc")), snap => {
             window.obraRegistos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            refreshYearOptions();
             renderObra();
+            renderTudo();
         });
         // Casamento — coleção separada, não entra em nenhuma outra conta
         onSnapshot(query(collection(db, "casamento"), orderBy("date", "desc")), snap => {
             window.wedRegistos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            refreshYearOptions();
             renderWed();
+            renderTudo();
         }, err => {
             console.error('Casamento:', err);
             const l = document.getElementById('wedList');
@@ -1020,11 +1096,11 @@
         try {
             const dbRef = await window._obraDBReady;
             if (window.obraEditingId) {
-                await updateDoc(doc(dbRef, "obra", window.obraEditingId), data);
+                await updateDoc(doc(dbRef, "obra", window.obraEditingId), withAuthor(data, false));
                 window.obraEditingId = null;
                 showToast("✅ Registo atualizado");
             } else {
-                await addDoc(collection(dbRef, "obra"), data);
+                await addDoc(collection(dbRef, "obra"), withAuthor(data, true));
                 showToast("🏡 Registo da Quinta Guarda guardado!");
             }
             closeObraModal();
@@ -1090,7 +1166,7 @@
                     data.recurKey = old?.recurKey || null;
                     data.recurDay = old?.recurDay || null;
                 }
-                await updateDoc(doc(db, "registos", window.editingId), data);
+                await updateDoc(doc(db, "registos", window.editingId), withAuthor(data, false));
                 window.editingId = null;
                 showToast("✅ Registo atualizado");
             } else {
@@ -1098,7 +1174,7 @@
                     data.recurKey = makeRecurKey();
                     data.recurDay = parseInt(date.slice(8,10), 10);
                 }
-                await addDoc(collection(db, "registos"), data);
+                await addDoc(collection(db, "registos"), withAuthor(data, true));
                 // As ocorrências em falta (até ao mês atual) são criadas pelo
                 // listener através de ensureRecurringOccurrences().
 
@@ -1122,8 +1198,10 @@
             return;
         }
         if (confirm("Eliminar este registo?")) {
-            await deleteDoc(doc(db, "registos", id));
-            showToast("🗑️ Registo eliminado");
+            try {
+                await deleteDoc(doc(db, "registos", id));
+                showToast("🗑️ Registo eliminado");
+            } catch (e) { alert("Erro ao eliminar: " + e.message); }
         }
     };
 
@@ -1137,7 +1215,8 @@
         const r = window.registros.find(x => x.id === id);
         if (!r || mode === 'cancel') return;
         try {
-            const marker = { type: 'SKIP', date: r.date, recurKey: r.recurKey, recur: false };
+            const marker = { type: 'SKIP', date: r.date, recurKey: r.recurKey, recur: false,
+                deletedBy: window.currentUserName || null, deletedAt: new Date().toISOString() };
             if (mode === 'one') {
                 await setDoc(doc(db, "registos", id), marker);
                 showToast("🗑️ Eliminado só este mês");
@@ -1193,6 +1272,15 @@
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
+
+    // ═══ AUTORIA ═══
+    // A partir desta versão, cada movimento guarda quem o registou e quando.
+    function withAuthor(data, isNew) {
+        const who = window.currentUserName || null;
+        const now = new Date().toISOString();
+        return isNew ? { ...data, createdBy: who, createdAt: now } : { ...data, updatedBy: who, updatedAt: now };
+    }
+    window.withAuthor = withAuthor;
 
     // ═══ CATEGORIAS ═══
     const CATS = [
@@ -1337,7 +1425,9 @@
                             recurKey: key,
                             recurDay: anchorDay,
                             link: previous.link || null,
-                            nota: previous.nota || null
+                            nota: previous.nota || null,
+                            createdBy: 'Automático',
+                            createdAt: new Date().toISOString()
                         };
                         // ID determinístico: nunca cria duas ocorrências do mesmo mês.
                         const id = `${key}-${mk}`;
@@ -1450,7 +1540,8 @@
         try {
             const { db, doc, setDoc } = window._fb;
             await setDoc(doc(db, 'registos', `${key}-${nextMk}`), {
-                type: 'SKIP', date: occurrenceDate(n.year, n.month, s.day), recurKey: key, recur: false, ended: true
+                type: 'SKIP', date: occurrenceDate(n.year, n.month, s.day), recurKey: key, recur: false, ended: true,
+                deletedBy: window.currentUserName || null, deletedAt: new Date().toISOString()
             });
             showToast('⏹️ Recorrente terminada');
             setTimeout(renderSeriesList, 300);
@@ -1465,6 +1556,91 @@
         if (e.target.id === 'seriesModal') closeSeriesModal();
     });
 
+    // ═══ EXCEL (ajudante comum) ═══
+    // Cria uma folha com larguras, filtro no cabeçalho e formato € nas colunas de valor.
+    const EUR_FMT = '#,##0.00 "€"';
+    function makeSheet(rows, widths, emptyMsg) {
+        const data = rows.length ? rows : [{ 'Info': emptyMsg || 'Sem registos' }];
+        const ws = XLSX.utils.json_to_sheet(data);
+        if (widths) ws['!cols'] = widths.map(w => ({ wch: w }));
+        if (rows.length && ws['!ref'] && XLSX.utils.decode_range) {
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            const headers = Object.keys(data[0]);
+            headers.forEach((h, c) => {
+                if (!/€/.test(h)) return;
+                for (let r = 1; r <= range.e.r; r++) {
+                    const cell = ws[XLSX.utils.encode_cell({ r, c })];
+                    if (cell && cell.t === 'n') cell.z = EUR_FMT;
+                }
+            });
+            ws['!autofilter'] = { ref: ws['!ref'] };
+        }
+        return ws;
+    }
+    function saveWorkbook(filename, sheets) {
+        const wb = XLSX.utils.book_new();
+        sheets.forEach(([name, ws]) => XLSX.utils.book_append_sheet(wb, ws, name));
+        XLSX.writeFile(wb, filename);
+    }
+    const r2 = v => Math.round((Number(v) || 0) * 100) / 100;
+    const fmtStamp = iso => iso ? new Date(iso).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    const periodLabel = (m, a) => {
+        const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+        return (m === 'all' ? 'Todos os meses' : meses[parseInt(m) - 1]) + (a === 'all' ? ' · todos os anos' : ' ' + a);
+    };
+    const authorCols = r => ({
+        'Registado por': r.createdBy || '', 'Registado em': fmtStamp(r.createdAt),
+        'Editado por': r.updatedBy || '', 'Editado em': fmtStamp(r.updatedAt)
+    });
+    window.makeSheet = makeSheet; window.saveWorkbook = saveWorkbook;
+
+    function exportAcertosExcel() {
+        const selMes = document.querySelector('#tab-acertos .selMes')?.value || 'all';
+        const selAno = document.querySelector('#tab-acertos .selAno')?.value || 'all';
+        const rows = window.registros.filter(r => {
+            if (r.type !== 'PAY') return false;
+            const p = (r.date || '').split('-');
+            return (selMes === 'all' || parseInt(p[1] || '0').toString() === selMes) && (selAno === 'all' || p[0] === selAno);
+        }).sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(r => ({
+            'Data': r.date, 'De': r.quem, 'Para': getPayDirection(r), 'Valor (€)': r2(r.val),
+            'Nota': r.nota || '', ...authorCols(r)
+        }));
+        if (!rows.length) return showToast('⚠️ Sem acertos neste período');
+        const tj = rows.filter(r => r.De === 'Joana').reduce((s, r) => s + r['Valor (€)'], 0);
+        const tt = rows.filter(r => r.De === 'Toni').reduce((s, r) => s + r['Valor (€)'], 0);
+        const resumo = [
+            { 'Resumo': 'Período', 'Valor (€)': periodLabel(selMes, selAno) },
+            { 'Resumo': 'Número de acertos', 'Valor (€)': rows.length },
+            { 'Resumo': 'Joana → Toni', 'Valor (€)': r2(tj) },
+            { 'Resumo': 'Toni → Joana', 'Valor (€)': r2(tt) }
+        ];
+        saveWorkbook(`acertos_${todayISO()}.xlsx`, [['Resumo', makeSheet(resumo, [22, 24])], ['Acertos', makeSheet(rows, [12, 8, 8, 11, 30, 13, 17, 12, 17])]]);
+        showToast('📊 Excel exportado!');
+    }
+    window.exportAcertosExcel = exportAcertosExcel;
+
+    function exportObraExcel() {
+        const regs = (window.obraRegistos || []).slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+        if (!regs.length) return showToast('⚠️ Sem registos da Quinta Guarda');
+        const rows = regs.map(r => ({
+            'Data': r.date, 'Descrição': r.desc, 'Quem pagou': r.quem, 'Valor (€)': r2(r.val),
+            'Link': r.link || '', ...authorCols(r)
+        }));
+        const sum = q => r2(regs.filter(r => r.quem === q).reduce((s, r) => s + Number(r.val), 0));
+        const tj = sum('Joana'), tt = sum('Toni'), tc = sum('Conjunto');
+        const diff = r2((tj - tt) / 2);
+        const resumo = [
+            { 'Resumo': 'Total investido', 'Valor (€)': r2(tj + tt + tc) },
+            { 'Resumo': 'Pago pela Joana', 'Valor (€)': tj },
+            { 'Resumo': 'Pago pelo Toni', 'Valor (€)': tt },
+            { 'Resumo': 'Pago em conjunto', 'Valor (€)': tc },
+            { 'Resumo': Math.abs(diff) < 0.01 ? 'Balanço: em equilíbrio' : (diff > 0 ? 'Balanço: Toni deve à Joana' : 'Balanço: Joana deve ao Toni'), 'Valor (€)': Math.abs(diff) }
+        ];
+        saveWorkbook(`quinta_guarda_${todayISO()}.xlsx`, [['Resumo', makeSheet(resumo, [28, 14])], ['Registos', makeSheet(rows, [12, 30, 11, 11, 40, 13, 17, 12, 17])]]);
+        showToast('📊 Excel exportado!');
+    }
+    window.exportObraExcel = exportObraExcel;
+
     // ═══ CÓPIA DE SEGURANÇA ═══
     function exportBackup() {
         const regs = (window.registros || []).slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
@@ -1475,39 +1651,37 @@
             'Data': r.date, 'Descrição': r.desc, 'Categoria': catLabel(r.cat), 'Quem pagou': r.quem,
             'Valor (€)': Number(r.val), 'Recorrente': r.recur ? 'Sim' : 'Não',
             'Nota': r.nota || '', 'Link': r.link || '',
-            'ID': r.id, 'Série': r.recurKey || '', 'Dia série': r.recurDay || '', 'Cat. ID': r.cat || ''
+            'ID': r.id, 'Série': r.recurKey || '', 'Dia série': r.recurDay || '', 'Cat. ID': r.cat || '', ...authorCols(r)
         }));
         const acertos = regs.filter(r => r.type === 'PAY').map(r => ({
             'Data': r.date, 'De': r.quem, 'Para': getPayDirection(r), 'Valor (€)': Number(r.val),
-            'Nota': r.nota || '', 'ID': r.id
+            'Nota': r.nota || '', 'ID': r.id, ...authorCols(r)
         }));
         const quinta = obra.map(r => ({
             'Data': r.date, 'Descrição': r.desc, 'Quem pagou': r.quem, 'Valor (€)': Number(r.val),
-            'Link': r.link || '', 'ID': r.id
+            'Link': r.link || '', 'ID': r.id, ...authorCols(r)
         }));
         const marcadores = regs.filter(r => r.type === 'SKIP').map(r => ({
-            'Data': r.date, 'Série': r.recurKey, 'Tipo': r.ended ? 'Série terminada' : 'Mês eliminado', 'ID': r.id
+            'Data': r.date, 'Série': r.recurKey, 'Tipo': r.ended ? 'Série terminada' : 'Mês eliminado', 'ID': r.id,
+            'Eliminado por': r.deletedBy || '', 'Eliminado em': fmtStamp(r.deletedAt)
         }));
         const cfg = window.config || {};
         const definicoes = [
             { 'Definição': 'Ajuste manual (€)', 'Valor': Number(cfg.d25 || 0) },
             { 'Definição': 'Quem deve o ajuste', 'Valor': cfg.dev25 || '' },
             { 'Definição': 'Balanço acumulado (€)', 'Valor': Number((window._currentBalance || 0).toFixed(2)) },
-            { 'Definição': 'Data da cópia', 'Valor': new Date().toLocaleString('pt-PT') }
+            { 'Definição': 'Data da cópia', 'Valor': new Date().toLocaleString('pt-PT') },
+            { 'Definição': 'Feita por', 'Valor': window.currentUserName || '' }
         ];
 
         const wb = XLSX.utils.book_new();
-        const add = (rows, name, cols, empty) => {
-            const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [empty]);
-            ws['!cols'] = cols.map(w => ({ wch: w }));
-            XLSX.utils.book_append_sheet(wb, ws, name);
-        };
-        add(despesas, 'Despesas', [12,28,14,11,10,11,28,40,24,28,9,12], { 'Data': 'Sem registos' });
-        add(acertos, 'Acertos', [12,8,8,10,28,24], { 'Data': 'Sem registos' });
-        add(quinta, 'Quinta Guarda', [12,28,11,10,40,24], { 'Data': 'Sem registos' });
-        add(wedRows(), 'Casamento', [12,10,28,16,8,10,10,10,28,24], { 'Data': 'Sem registos' });
-        add(definicoes, 'Definições', [24,22], {});
-        add(marcadores, 'Recorrentes (interno)', [12,28,16,30], { 'Data': 'Sem registos' });
+        const add = (rows, name, cols) => XLSX.utils.book_append_sheet(wb, makeSheet(rows, cols), name);
+        add(despesas, 'Despesas', [12,28,14,11,11,11,28,40,24,28,9,12,13,17,12,17]);
+        add(acertos, 'Acertos', [12,8,8,11,28,24,13,17,12,17]);
+        add(quinta, 'Quinta Guarda', [12,28,11,11,40,24,13,17,12,17]);
+        add(wedRows(), 'Casamento', [12,10,28,18,8,8,13,11,28,13,17,12,17,24]);
+        add(definicoes, 'Definições', [24,22]);
+        add(marcadores, 'Recorrentes (interno)', [12,28,16,30,13,17]);
         XLSX.writeFile(wb, `copia_seguranca_financas_${todayISO()}.xlsx`);
         showToast(`💾 Cópia criada: ${despesas.length} despesas, ${acertos.length} acertos, ${quinta.length} da Quinta`);
     }
@@ -1592,10 +1766,10 @@
         };
         try {
             if (window.editingAcertoId) {
-                await window._fb.updateDoc(window._fb.doc(window._fb.db, 'registos', window.editingAcertoId), data);
+                await window._fb.updateDoc(window._fb.doc(window._fb.db, 'registos', window.editingAcertoId), withAuthor(data, false));
                 showToast('✅ Acerto atualizado');
             } else {
-                await window._fb.addDoc(window._fb.collection(window._fb.db, 'registos'), data);
+                await window._fb.addDoc(window._fb.collection(window._fb.db, 'registos'), withAuthor(data, true));
                 showToast('💸 Acerto registado');
             }
             resetAcertoForm();
@@ -1680,6 +1854,7 @@
         if (el) el.classList.add('active');
         if (tab === 'obra') { renderObra(); return; }
         if (tab === 'casamento') { renderWed(); return; }
+        if (tab === 'tudo') { renderTudo(); return; }
         if (tab === 'acertos') { render(); renderAcertos(); return; }
         render();
     }
@@ -1730,7 +1905,11 @@
     }
 
     function escHtml(s) {
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    // Só deixa abrir links http(s).
+    function safeLink(u) {
+        return /^https?:\/\//i.test(String(u || '').trim()) ? escHtml(String(u).trim()) : '';
     }
 
     function createItem(r) {
@@ -1746,7 +1925,7 @@
 
         const notaLine = r.nota ? `<div class="item-nota">📝 ${escHtml(r.nota)}</div>` : '';
 
-        const linkBtn = r.link ? `<a href="${escHtml(r.link)}" target="_blank" class="btn-icon" title="Abrir documento" style="text-decoration:none;">📎</a>` : '';
+        const linkBtn = safeLink(r.link) ? `<a href="${safeLink(r.link)}" target="_blank" rel="noopener" class="btn-icon" title="Abrir documento" style="text-decoration:none;">📎</a>` : '';
 
         el.innerHTML = `
             <div class="item-icon">${icon}</div>
@@ -1755,7 +1934,7 @@
                 <div class="item-meta">${r.date} ${personTag} ${settleTag} ${recurTag}</div>
                 ${notaLine}
             </div>
-            <div class="item-val${isSettle ? ' pay' : ''}">${r.val.toFixed(2)}€</div>
+            <div class="item-val${isSettle ? ' pay' : ''}">${Number(r.val).toFixed(2)}€</div>
             <div class="item-actions">
                 ${linkBtn}
                 <button class="btn-icon" onclick="editCloud('${r.id}')">✏️</button>
@@ -1817,7 +1996,7 @@
                 countExp++;
                 if (r.recur && listRecur) {
                     countRecur++;
-                    recurPeriodTotal += r.val;
+                    recurPeriodTotal += Number(r.val);
                     listRecur.appendChild(el);
                 } else if (listDiv) {
                     listDiv.appendChild(el);
@@ -1909,12 +2088,12 @@
         const catTotals = {};
         exp.forEach(r => {
             const label = r.cat ? (CATS.find(c => c.id === r.cat)?.icon + ' ' + CATS.find(c => c.id === r.cat)?.label) : r.desc;
-            catTotals[label] = (catTotals[label] || 0) + r.val;
+            catTotals[label] = (catTotals[label] || 0) + Number(r.val);
         });
         renderChart('chartCategorias', 'doughnut', Object.keys(catTotals), Object.values(catTotals),
-            ['#f08080','#5b8cdb','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e74c3c','#3498db','#e67e22','#16a085']);
-        const j = exp.filter(r => r.quem === 'Joana').reduce((s, r) => s + r.val, 0);
-        const t = exp.filter(r => r.quem === 'Toni').reduce((s, r) => s + r.val, 0);
+            ['#f08080','#5b8cdb','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e74c3c','#3498db','#e67e22','#16a085','#c44569','#7f8c8d','#d4ac0d','#2c3e50']);
+        const j = exp.filter(r => r.quem === 'Joana').reduce((s, r) => s + Number(r.val), 0);
+        const t = exp.filter(r => r.quem === 'Toni').reduce((s, r) => s + Number(r.val), 0);
         renderChart('chartComparacao', 'pie', ['Joana', 'Toni'], [j, t], ['#f08080', '#5b8cdb']);
     }
 
@@ -1941,8 +2120,24 @@
     }
 
     function exportExcel() {
-        const records = getFilteredRecords();
+        const records = getFilteredRecords().slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
         if (!records.length) return showToast("⚠️ Sem registos para exportar");
+        const selMes = document.querySelector('.selMes')?.value || "all";
+        const selAno = document.querySelector('.selAno')?.value || "all";
+        const exp = records.filter(r => r.type === 'EXP');
+        const tj = r2(exp.filter(r => r.quem === 'Joana').reduce((s, r) => s + Number(r.val), 0));
+        const tt = r2(exp.filter(r => r.quem === 'Toni').reduce((s, r) => s + Number(r.val), 0));
+        const bal = r2((tj - tt) / 2);
+        const bg = r2(window._currentBalance || 0);
+        const resumo = [
+            { 'Resumo': 'Período', 'Valor (€)': periodLabel(selMes, selAno) },
+            { 'Resumo': 'Total de despesas', 'Valor (€)': r2(tj + tt) },
+            { 'Resumo': 'Joana pagou', 'Valor (€)': tj },
+            { 'Resumo': 'Toni pagou', 'Valor (€)': tt },
+            { 'Resumo': Math.abs(bal) < 0.01 ? 'Balanço do período: equilibrado' : (bal > 0 ? 'Balanço do período: Toni deve à Joana' : 'Balanço do período: Joana deve ao Toni'), 'Valor (€)': Math.abs(bal) },
+            { 'Resumo': 'Acertos no período', 'Valor (€)': r2(records.filter(r => r.type === 'PAY').reduce((s, r) => s + Number(r.val), 0)) },
+            { 'Resumo': Math.abs(bg) < 0.05 ? 'Balanço acumulado (hoje): contas em dia' : (bg > 0 ? 'Balanço acumulado (hoje): Toni deve à Joana' : 'Balanço acumulado (hoje): Joana deve ao Toni'), 'Valor (€)': Math.abs(bg) }
+        ];
         const data = records.map(r => ({
             'Data': r.date,
             'Tipo': r.type === 'PAY' ? 'Acerto' : 'Despesa',
@@ -1950,16 +2145,16 @@
             'Categoria': r.cat ? CATS.find(c => c.id === r.cat)?.label || '' : '',
             'Quem': r.quem,
             'Para': r.type === 'PAY' ? getPayDirection(r) : '',
-            'Valor (€)': r.val,
+            'Valor (€)': r2(r.val),
             'Recorrente': r.recur ? 'Sim' : 'Não',
             'Nota': r.nota || '',
-            'Link': r.link || ''
+            'Link': r.link || '',
+            ...authorCols(r)
         }));
-        const ws = XLSX.utils.json_to_sheet(data);
-        ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 28 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 30 }, { wch: 40 }];
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Finanças");
-        XLSX.writeFile(wb, `financas_joana_toni.xlsx`);
+        saveWorkbook(`casa_${todayISO()}.xlsx`, [
+            ['Resumo', makeSheet(resumo, [40, 22])],
+            ['Movimentos', makeSheet(data, [12, 10, 28, 15, 10, 10, 11, 11, 30, 40, 13, 17, 12, 17])]
+        ]);
         showToast("📊 Excel exportado!");
     }
 
@@ -1972,10 +2167,10 @@
         const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
         const periodoLabel = selMes === "all" ? "Todos os períodos" : `${meses[parseInt(selMes)-1]} ${selAno !== "all" ? selAno : ''}`;
 
-        const totalExp = records.filter(r => r.type === 'EXP').reduce((s, r) => s + r.val, 0);
-        const totalPay = records.filter(r => r.type === 'PAY').reduce((s, r) => s + r.val, 0);
-        const joana    = records.filter(r => r.type === 'EXP' && r.quem === 'Joana').reduce((s, r) => s + r.val, 0);
-        const toni     = records.filter(r => r.type === 'EXP' && r.quem === 'Toni').reduce((s, r) => s + r.val, 0);
+        const totalExp = records.filter(r => r.type === 'EXP').reduce((s, r) => s + Number(r.val), 0);
+        const totalPay = records.filter(r => r.type === 'PAY').reduce((s, r) => s + Number(r.val), 0);
+        const joana    = records.filter(r => r.type === 'EXP' && r.quem === 'Joana').reduce((s, r) => s + Number(r.val), 0);
+        const toni     = records.filter(r => r.type === 'EXP' && r.quem === 'Toni').reduce((s, r) => s + Number(r.val), 0);
 
         const rows = records.map(r => {
             const icon = r.type === 'PAY' ? '💸' : getCatIcon(r.cat);
@@ -1984,10 +2179,10 @@
             return `<tr>
                 <td>${r.date}</td>
                 <td>${tipo}</td>
-                <td>${icon} ${r.desc}${recTag}</td>
+                <td>${icon} ${escHtml(r.desc)}${recTag}</td>
                 <td>${r.quem}</td>
                 <td>${r.type === 'PAY' ? getPayDirection(r) : ''}</td>
-                <td style="text-align:right;font-weight:700;">${r.val.toFixed(2)}€</td>
+                <td style="text-align:right;font-weight:700;">${Number(r.val).toFixed(2)}€</td>
             </tr>`;
         }).join('');
 
@@ -2022,6 +2217,7 @@
         </body></html>`;
 
         const win = window.open('', '_blank');
+        if (!win) return alert('O browser bloqueou a janela do PDF. Usa o Excel ou permite janelas pop-up.');
         win.document.write(html);
         win.document.close();
         setTimeout(() => win.print(), 400);
@@ -2087,6 +2283,26 @@
     }
     initSelects();
     initHistCat();
+
+    // Acrescenta aos filtros de ano os anos que existam nos dados.
+    function refreshYearOptions() {
+        const years = new Set();
+        [window.registros, window.obraRegistos, window.wedRegistos].forEach(arr =>
+            (arr || []).forEach(r => { const y = parseInt((r.date || '').slice(0, 4)); if (y > 1990) years.add(y); }));
+        document.querySelectorAll('.selAno, #tudoAno').forEach(sel => {
+            const have = new Set([...sel.options].map(o => o.value));
+            const missing = [...years].filter(y => !have.has(String(y)));
+            if (!missing.length) return;
+            const cur = sel.value;
+            const all = [...new Set([...[...sel.options].map(o => o.value).filter(v => v !== 'all').map(Number), ...missing])].sort((a, b) => a - b);
+            const allLabel = sel.options[0]?.text || 'Ano: Todos';
+            sel.innerHTML = '';
+            sel.add(new Option(allLabel, 'all'));
+            all.forEach(y => sel.add(new Option(y, String(y))));
+            sel.value = cur;
+        });
+    }
+    window.refreshYearOptions = refreshYearOptions;
     document.getElementById('inDate').value = todayISO();
     document.getElementById('acertoDate').value = todayISO();
     document.getElementById('obraDate').value = todayISO();
@@ -2133,9 +2349,9 @@
 
         let totJ = 0, totT = 0, totC = 0;
         window.obraRegistos.forEach(r => {
-            if (r.quem === 'Joana')    totJ += r.val;
-            else if (r.quem === 'Toni')    totT += r.val;
-            else if (r.quem === 'Conjunto') totC += r.val;
+            if (r.quem === 'Joana')    totJ += Number(r.val);
+            else if (r.quem === 'Toni')    totT += Number(r.val);
+            else if (r.quem === 'Conjunto') totC += Number(r.val);
         });
         const total = totJ + totT + totC;
 
@@ -2191,14 +2407,14 @@
             const el = document.createElement('div');
             el.className = 'item';
             el.style.borderLeft = '4px solid ' + (r.quem === 'Joana' ? 'var(--obra-j)' : r.quem === 'Toni' ? 'var(--obra-t)' : 'var(--obra-c)');
-            const linkBtn = r.link ? `<a href="${escHtml(r.link)}" target="_blank" class="btn-icon" title="Abrir documento" style="text-decoration:none;">📎</a>` : '';
+            const linkBtn = safeLink(r.link) ? `<a href="${safeLink(r.link)}" target="_blank" rel="noopener" class="btn-icon" title="Abrir documento" style="text-decoration:none;">📎</a>` : '';
             el.innerHTML = `
                 <div class="item-icon">${icon}</div>
                 <div class="item-data">
                     <div class="item-desc">${escHtml(r.desc)}</div>
                     <div class="item-meta">${r.date} <span class="tag ${tagCls}">${r.quem}</span></div>
                 </div>
-                <div class="item-val" style="color:var(--obra);">${r.val.toFixed(2)}€</div>
+                <div class="item-val" style="color:var(--obra);">${Number(r.val).toFixed(2)}€</div>
                 <div class="item-actions">
                     ${linkBtn}
                     <button class="btn-icon" onclick="editObra('${r.id}')">✏️</button>
@@ -2455,10 +2671,10 @@
         try {
             const { db, doc, collection, addDoc, updateDoc } = window._fb;
             if (w.editing) {
-                await updateDoc(doc(db, 'casamento', w.editing), data);
+                await updateDoc(doc(db, 'casamento', w.editing), withAuthor(data, false));
                 showToast('✅ Movimento atualizado');
             } else {
-                await addDoc(collection(db, 'casamento'), data);
+                await addDoc(collection(db, 'casamento'), withAuthor(data, true));
                 showToast(data.kind === 'despesa' ? '➖ Despesa gravada' : data.kind === 'receita' ? '➕ Receita gravada' : '💸 Acerto gravado');
             }
             closeWedModal();
@@ -2502,6 +2718,7 @@
             'Método': r.metodo === 'dinheiro' ? 'Dinheiro' : (r.kind === 'receita' ? 'MB' : r.kind === 'acerto' ? 'Transferência' : 'Conta'),
             'Valor (€)': Number(r.val),
             'Nota': r.nota || '',
+            ...authorCols(r),
             'ID': r.id
         }));
     }
@@ -2523,14 +2740,179 @@
             ]),
             { 'Resumo': Math.abs(c.diff) < 0.01 ? 'Acerto: contas em dia' : `Acerto: ${c.diff > 0 ? 'Toni deve à Joana' : 'Joana deve ao Toni'}`, 'Valor (€)': +Math.abs(c.diff).toFixed(2) }
         ];
-        const wb = XLSX.utils.book_new();
-        const ws1 = XLSX.utils.json_to_sheet(rows); ws1['!cols'] = [12,10,30,20,8,8,13,10,28,24].map(w => ({ wch: w }));
-        const ws2 = XLSX.utils.json_to_sheet(resumo); ws2['!cols'] = [{ wch: 26 }, { wch: 12 }];
-        XLSX.utils.book_append_sheet(wb, ws2, 'Resumo');
-        XLSX.utils.book_append_sheet(wb, ws1, 'Movimentos');
-        XLSX.writeFile(wb, `casamento_${todayISO()}.xlsx`);
+        saveWorkbook(`casamento_${todayISO()}.xlsx`, [
+            ['Resumo', makeSheet(resumo, [28, 14])],
+            ['Movimentos', makeSheet(rows, [12, 10, 30, 20, 8, 8, 13, 11, 28, 13, 17, 12, 17, 24])]
+        ]);
+        showToast('📊 Excel exportado!');
     }
     window.exportWedExcel = exportWedExcel;
+
+    // ═══════════════════════════ TUDO ═══════════════════════════
+    // Junta os movimentos de todas as áreas, só para consulta (não altera contas).
+    const AREAS = {
+        casa:      { icon: '🏠', label: 'Casa' },
+        acerto:    { icon: '💸', label: 'Acerto Casa' },
+        quinta:    { icon: '🏡', label: 'Quinta Guarda' },
+        casamento: { icon: '💍', label: 'Casamento' }
+    };
+    function allMovements() {
+        const out = [];
+        (window.registros || []).forEach(r => {
+            if (r.type === 'EXP') out.push({ ...r, area: 'casa', kind: 'despesa', icon: getCatIcon(r.cat),
+                catLabel: CATS.find(c => c.id === r.cat)?.label || '', edit: `editCloud('${r.id}')` });
+            else if (r.type === 'PAY') out.push({ ...r, area: 'acerto', kind: 'acerto', para: getPayDirection(r), icon: '💸',
+                desc: r.nota || `Acerto ${r.quem} → ${getPayDirection(r)}`, edit: `editCloud('${r.id}')` });
+        });
+        (window.obraRegistos || []).forEach(r => out.push({ ...r, area: 'quinta', kind: 'despesa', icon: '🏡', edit: `editObra('${r.id}')` }));
+        (window.wedRegistos || []).forEach(r => {
+            const isAc = r.kind === 'acerto';
+            out.push({ ...r, area: 'casamento', kind: r.kind,
+                para: isAc ? (r.para || (r.quem === 'Joana' ? 'Toni' : 'Joana')) : null,
+                icon: r.kind === 'despesa' ? wedCat(r.cat).icon : r.kind === 'receita' ? '🎁' : '💸',
+                catLabel: r.kind === 'despesa' ? wedCat(r.cat).label : '',
+                desc: isAc ? `Acerto ${r.quem} → ${r.para || (r.quem === 'Joana' ? 'Toni' : 'Joana')}` : r.desc,
+                edit: `editWed('${r.id}')` });
+        });
+        return out.filter(m => m.date).sort((a, b) =>
+            b.date.localeCompare(a.date) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    }
+    window.allMovements = allMovements;
+
+    function tudoFiltered() {
+        const q = normText(document.getElementById('tudoSearch')?.value || '');
+        const area = document.getElementById('tudoArea')?.value || 'all';
+        const pes = document.getElementById('tudoPessoa')?.value || 'all';
+        const aut = document.getElementById('tudoAutor')?.value || 'all';
+        const mes = document.getElementById('tudoMes')?.value || 'all';
+        const ano = document.getElementById('tudoAno')?.value || 'all';
+        return allMovements().filter(m => {
+            const [y, mo] = m.date.split('-');
+            if (ano !== 'all' && y !== ano) return false;
+            if (mes !== 'all' && String(parseInt(mo)) !== mes) return false;
+            if (area !== 'all' && m.area !== area) return false;
+            if (pes !== 'all' && m.quem !== pes && m.para !== pes) return false;
+            if (aut === 'none' ? !!m.createdBy : (aut !== 'all' && m.createdBy !== aut)) return false;
+            if (q && !normText([m.desc, m.nota, m.catLabel, AREAS[m.area].label, m.quem, m.para, m.createdBy].join(' ')).includes(q)) return false;
+            return true;
+        });
+    }
+
+    function renderTudo() {
+        const list = document.getElementById('tudoList');
+        if (!list) return;
+        const rows = tudoFiltered();
+        const sum = f => rows.filter(f).reduce((s, m) => s + Number(m.val || 0), 0);
+        document.getElementById('tudoSaidas').innerText = eur(sum(m => m.kind === 'despesa'));
+        document.getElementById('tudoEntradas').innerText = eur(sum(m => m.kind === 'receita'));
+        document.getElementById('tudoAcertos').innerText = eur(sum(m => m.kind === 'acerto'));
+        const ppl = ['Joana', 'Toni', 'Conjunto'].map(n => {
+            const pag = rows.filter(m => m.kind === 'despesa' && m.quem === n).reduce((s, m) => s + Number(m.val), 0);
+            const rec = rows.filter(m => m.kind === 'receita' && m.quem === n).reduce((s, m) => s + Number(m.val), 0);
+            if (!pag && !rec) return '';
+            return `${n === 'Joana' ? '🔴' : n === 'Toni' ? '🔵' : '🟢'} ${n}: pagou <b>${eur(pag)}</b>${rec ? ` · recebeu <b>${eur(rec)}</b>` : ''}`;
+        }).filter(Boolean);
+        const byAuthor = { Joana: 0, Toni: 0, 'Automático': 0, none: 0 };
+        rows.forEach(m => { byAuthor[m.createdBy in byAuthor ? m.createdBy : 'none']++; });
+        const autParts = [`Joana ${byAuthor.Joana}`, `Toni ${byAuthor.Toni}`];
+        if (byAuthor['Automático']) autParts.push(`automáticos ${byAuthor['Automático']}`);
+        if (byAuthor.none) autParts.push(`sem info ${byAuthor.none}`);
+        document.getElementById('tudoPeople').innerHTML =
+            `<div><b style="font-family:inherit">${rows.length}</b> movimento(s)</div>` +
+            (ppl.length ? ppl.map(x => `<div>${x}</div>`).join('') : '') +
+            (rows.length ? `<div>✍️ Registados por: ${autParts.join(' · ')}</div>` : '');
+
+        if (!rows.length) {
+            list.innerHTML = '<div class="empty"><div class="empty-icon">🗂️</div><div class="empty-text">Nenhum movimento com estes filtros</div></div>';
+            return;
+        }
+        const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const mesesC = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+        const stamp = iso => { if (!iso) return ''; const d = new Date(iso); return `${d.getDate()} ${mesesC[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+        let html = '', curMonth = '';
+        const monthTotals = {};
+        rows.forEach(m => { const k = m.date.slice(0, 7); if (m.kind === 'despesa') monthTotals[k] = (monthTotals[k] || 0) + Number(m.val); });
+        rows.forEach(m => {
+            const mk = m.date.slice(0, 7);
+            if (mk !== curMonth) {
+                curMonth = mk;
+                html += `<div class="tudo-month"><span>${meses[parseInt(mk.slice(5, 7)) - 1]} ${mk.slice(0, 4)}</span><span>${monthTotals[mk] ? 'saídas ' + eur(monthTotals[mk]) : ''}</span></div>`;
+            }
+            const [yy, mo, dd] = m.date.split('-');
+            const pCls = m.quem === 'Joana' ? 'tag-j' : m.quem === 'Toni' ? 'tag-t' : 'tag-c';
+            const pTag = `<span class="tag ${pCls}">${escHtml(m.kind === 'acerto' ? `${m.quem} → ${m.para}` : m.quem)}</span>`;
+            const aTag = `<span class="tag tag-area-${m.area}">${AREAS[m.area].icon} ${AREAS[m.area].label}</span>`;
+            const mTag = m.area === 'casamento' ? `<span class="tag ${m.metodo === 'dinheiro' ? 'tag-din' : 'tag-ban'}">${metLabel(m)}</span>` : '';
+            const rTag = m.recur ? '<span class="tag tag-recur">🔁</span>' : '';
+            const valCls = m.kind === 'receita' ? 'rec' : m.kind === 'despesa' ? 'desp' : 'pay';
+            const sign = m.kind === 'receita' ? '+' : m.kind === 'despesa' ? '−' : '';
+            let author = '';
+            if (m.createdBy === 'Automático') author = `🔁 Criado automaticamente${m.createdAt ? ' · ' + stamp(m.createdAt) : ''}`;
+            else if (m.createdBy) author = `✍️ Registado por ${escHtml(m.createdBy)}${m.createdAt ? ' · ' + stamp(m.createdAt) : ''}`;
+            if (m.updatedBy) author += `${author ? ' · ' : '✍️ '}editado por ${escHtml(m.updatedBy)}${m.updatedAt ? ' ' + stamp(m.updatedAt) : ''}`;
+            html += `<div class="wed-item" style="border-left-color:${m.kind === 'receita' ? 'var(--settle)' : m.kind === 'acerto' ? 'var(--wed)' : m.area === 'quinta' ? 'var(--obra)' : 'var(--danger)'}">
+                <div class="item-icon">${m.icon}</div>
+                <div class="wed-item-main">
+                    <div class="wed-item-top">
+                        <div class="item-desc">${escHtml(m.desc)}</div>
+                        <div class="item-val ${valCls}">${sign}${Number(m.val).toFixed(2)}€</div>
+                    </div>
+                    <div class="wed-item-bottom">
+                        <div class="item-meta">${parseInt(dd)} ${mesesC[parseInt(mo) - 1]} ${aTag} ${pTag} ${mTag} ${rTag}</div>
+                        <div class="item-actions"><button class="btn-icon" onclick="${m.edit}" aria-label="Editar">✏️</button></div>
+                    </div>
+                    ${author ? `<div class="item-author">${author}</div>` : ''}
+                </div>
+            </div>`;
+        });
+        list.innerHTML = html;
+    }
+    window.renderTudo = renderTudo;
+
+    function exportTudoExcel() {
+        const rows = tudoFiltered().slice().reverse();
+        if (!rows.length) return showToast('⚠️ Nada para exportar com estes filtros');
+        const data = rows.map(m => ({
+            'Data': m.date,
+            'Área': AREAS[m.area].label,
+            'Movimento': m.kind === 'despesa' ? 'Saída' : m.kind === 'receita' ? 'Entrada' : 'Acerto',
+            'Descrição': m.desc,
+            'Categoria': m.catLabel || '',
+            'Quem': m.quem,
+            'Para': m.para || '',
+            'Método': m.area === 'casamento' ? (m.metodo === 'dinheiro' ? 'Dinheiro' : m.kind === 'receita' ? 'MB' : m.kind === 'acerto' ? 'Transferência' : 'Conta') : '',
+            'Valor (€)': r2(m.val),
+            'Recorrente': m.recur ? 'Sim' : '',
+            'Nota': m.nota || '',
+            ...authorCols(m)
+        }));
+        const S = f => r2(rows.filter(f).reduce((s, m) => s + Number(m.val), 0));
+        const resumo = [
+            { 'Resumo': 'Movimentos', 'Valor (€)': rows.length },
+            { 'Resumo': 'Saídas (despesas)', 'Valor (€)': S(m => m.kind === 'despesa') },
+            { 'Resumo': 'Entradas (receitas)', 'Valor (€)': S(m => m.kind === 'receita') },
+            { 'Resumo': 'Acertos', 'Valor (€)': S(m => m.kind === 'acerto') },
+            ...['Joana', 'Toni', 'Conjunto'].map(n => ({ 'Resumo': `Pago por ${n}`, 'Valor (€)': S(m => m.kind === 'despesa' && m.quem === n) })),
+            ...Object.keys(AREAS).map(a => ({ 'Resumo': `Saídas — ${AREAS[a].label}`, 'Valor (€)': S(m => m.area === a && m.kind === 'despesa') })).filter(x => x['Valor (€)'])
+        ];
+        saveWorkbook(`todos_movimentos_${todayISO()}.xlsx`, [
+            ['Resumo', makeSheet(resumo, [28, 14])],
+            ['Movimentos', makeSheet(data, [12, 14, 10, 30, 20, 10, 8, 13, 11, 10, 28, 13, 17, 12, 17])]
+        ]);
+        showToast('📊 Excel exportado!');
+    }
+    window.exportTudoExcel = exportTudoExcel;
+
+    (function initTudoSelects() {
+        const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+        const m = document.getElementById('tudoMes'), a = document.getElementById('tudoAno');
+        m.add(new Option('Mês: Todos', 'all'));
+        meses.forEach((x, i) => m.add(new Option(x, String(i + 1))));
+        a.add(new Option('Ano: Todos', 'all'));
+        const y = new Date().getFullYear();
+        for (let k = 2024; k <= y + 1; k++) a.add(new Option(k, String(k), false, k === y));
+        a.value = String(y);
+    })();
 </script>
 </body>
 </html>
