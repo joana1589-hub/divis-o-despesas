@@ -777,7 +777,10 @@
     window._recurSyncRunning = false;
 
     function makeLegacyRecurKey(r) {
-        return 'legacy:' + [r.desc || '', r.quem || '', r.cat || '', r.link || '', r.date || ''].join('|').toLowerCase();
+        // Chave estável para recorrentes antigas que ainda não têm recurKey.
+        // Não inclui a data completa, porque cada mês deve pertencer à mesma série.
+        const day = String(r.date || '').split('-')[2] || '1';
+        return 'legacy:' + [r.desc || '', r.quem || '', r.cat || '', r.link || '', day].join('|').toLowerCase();
     }
 
     function makeRecurKey(r) {
