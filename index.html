@@ -826,7 +826,20 @@
                     data.recurKey = makeRecurKey();
                     data.recurDay = parseInt(date.slice(8,10), 10);
                 }
-                await addDoc(collection(db, "registos"), data);
+                const newDocRef = await addDoc(collection(db, "registos"), data);
+
+                // Se foi criada uma nova recorrente, garante imediatamente a
+                // ocorrência do mês seguinte (sem depender de o listener
+                // Firestore já ter atualizado window.registros).
+                if (isRecur && data.recurKey) {
+                    try {
+                        const baseRecord = { id: newDocRef.id, ...data };
+                        await ensureNextRecurringOccurrence(baseRecord);
+                    } catch (recurErr) {
+                        console.error("Erro ao criar a próxima recorrência:", recurErr);
+                    }
+                }
+
                 showToast(data.type === 'PAY' ? "💸 Acerto registado!" : data.recur ? "🔁 Recorrente guardado!" : "✅ Despesa guardada");
             }
             cancelEdit();
@@ -954,6 +967,38 @@
         const lastDay = new Date(year, month, 0).getDate();
         const safeDay = Math.min(Math.max(1, day), lastDay);
         return `${year}-${String(month).padStart(2, '0')}-${String(safeDay).padStart(2, '0')}`;
+    }
+
+    async function ensureNextRecurringOccurrence(base) {
+        if (!base || base.type !== 'EXP' || base.recur !== true || !base.recurKey || !base.date) return;
+
+        const [baseYear, baseMonth] = base.date.slice(0, 7).split('-').map(Number);
+        const next = nextMonth(baseYear, baseMonth);
+        const targetDate = occurrenceDate(next.year, next.month, parseInt(base.recurDay, 10) || parseInt(base.date.slice(8, 10), 10) || 1);
+        const targetMonthKey = targetDate.slice(0, 7);
+        const deterministicId = `${base.recurKey}-${targetMonthKey}`;
+
+        // Se já existe qualquer ocorrência dessa série nesse mês, não duplica.
+        const alreadyThere = (window.registros || []).some(r =>
+            r.type === 'EXP' && r.recur === true && r.recurKey === base.recurKey && r.date.slice(0, 7) === targetMonthKey
+        );
+        if (alreadyThere) return;
+
+        const newRef = doc(db, "registos", deterministicId);
+        const newData = {
+            type: 'EXP',
+            date: targetDate,
+            desc: base.desc,
+            val: Number(base.val),
+            quem: base.quem,
+            cat: base.cat || null,
+            recur: true,
+            recurKey: base.recurKey,
+            recurDay: parseInt(base.recurDay, 10) || parseInt(base.date.slice(8, 10), 10) || 1,
+            link: base.link || null,
+            nota: base.nota || null
+        };
+        await setDoc(newRef, newData, { merge: false });
     }
 
     async function ensureRecurringOccurrences() {
