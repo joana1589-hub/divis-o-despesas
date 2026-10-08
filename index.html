@@ -366,6 +366,33 @@
         .wed-cat-top b { font-family: 'DM Mono', monospace; }
         .wed-bar { height: 7px; background: var(--light-gray); border-radius: 10px; overflow: hidden; }
         .wed-bar i { display: block; height: 100%; background: var(--wed); border-radius: 10px; }
+        .wed-kv { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 7px 0; font-size: 0.86rem; border-bottom: 1px solid var(--light-gray); }
+        .wed-kv:last-child { border-bottom: none; }
+        .wed-kv span { color: var(--gray); }
+        .wed-kv b { font-family: 'DM Mono', monospace; white-space: nowrap; }
+        .wed-kv.big span { color: var(--dark); font-weight: 700; }
+        .wed-kv.big b { font-size: 1.05rem; }
+        .wed-kv.muted { font-size: 0.78rem; }
+        .wed-ent-box { background: #fffbea; border: 1.5px solid #f6e3a1; border-radius: 14px; padding: 4px 12px; margin-top: 12px; }
+        .wed-ent-box .wed-kv { border-bottom-color: #f3e6b8; }
+        .wed-take { border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; background: var(--bg); border-left: 4px solid var(--light-gray); }
+        .wed-take.j { border-left-color: var(--joana); }
+        .wed-take.t { border-left-color: var(--toni); }
+        .wed-take-name { font-weight: 800; font-size: 0.92rem; margin-bottom: 4px; }
+        .wed-take .wed-kv { padding: 4px 0; font-size: 0.8rem; border-bottom: none; }
+        .wed-take-res { margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--light-gray); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 800; font-size: 0.9rem; }
+        .wed-take-res b { font-family: 'DM Mono', monospace; font-size: 1.15rem; white-space: nowrap; }
+        .wed-take-btn { margin-top: 8px; width: 100%; border: 1.5px solid var(--wed); background: white; color: var(--wed); border-radius: 10px; padding: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .wed-final { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--light-gray); }
+        .wed-final:last-child { border-bottom: none; }
+        .wed-final-name { font-weight: 800; font-size: 0.9rem; }
+        .wed-final-sub { font-size: 0.72rem; color: var(--gray); margin-top: 2px; line-height: 1.35; }
+        .wed-final b { font-family: 'DM Mono', monospace; font-size: 1.05rem; white-space: nowrap; }
+        .wed-pills3 .quem-pill { padding: 12px 4px; }
+        .wed-sec { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); font-weight: 800; margin: 8px 0 2px; }
+        .wed-met-pills { flex-wrap: wrap; }
+        .wed-met-pills .wed-met-ent { flex-basis: 100%; }
+        .tag-ent { background: #fdebd0; color: #9a5b00; }
         .wed-filters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
         .wed-filters select { padding: 10px 8px; font-size: 0.8rem; }
         .wed-filter-total { font-size: 0.78rem; color: var(--gray); margin-bottom: 10px; }
@@ -753,38 +780,63 @@
             <button onclick="exportWedExcel()" class="user-badge xls-badge">📊 Excel</button>
         </div>
 
+        <!-- Lucro -->
         <div class="wed-header">
-            <div class="wed-header-label" id="wedSaldoLabel">Custo do casamento</div>
+            <div class="wed-header-label" id="wedSaldoLabel">Lucro do casamento</div>
             <div class="wed-total" id="wedSaldo">0.00€</div>
-            <div class="wed-total-sub" id="wedSaldoSub">Despesas menos receitas</div>
+            <div class="wed-total-sub" id="wedSaldoSub">Prendas − despesas</div>
             <div class="wed-split">
-                <div><span>Despesas</span><b id="wedTotDesp">0.00€</b></div>
-                <div><span>Receitas</span><b id="wedTotRec">0.00€</b></div>
+                <div><span>💵 Em dinheiro</span><b id="wedLucroDin">0.00€</b></div>
+                <div><span>🏦 Em MB</span><b id="wedLucroBan">0.00€</b></div>
             </div>
         </div>
 
         <div class="wed-actions">
+            <button class="wed-btn rec" onclick="openWedForm('receita')">🎁 Prenda</button>
             <button class="wed-btn desp" onclick="openWedForm('despesa')">➖ Despesa</button>
-            <button class="wed-btn rec" onclick="openWedForm('receita')">➕ Receita</button>
         </div>
 
+        <!-- Quanto cada um tira -->
         <div class="card">
-            <div class="card-title">⚖️ Acerto entre vocês (50/50)</div>
-            <div class="wed-settle">
-                <div class="wed-settle-title" id="wedSettleTitle">✅ Contas em dia</div>
-                <div class="wed-settle-val" id="wedSettleVal">0.00€</div>
-                <div class="wed-settle-sub" id="wedSettleSub">—</div>
-                <button class="wed-settle-btn" id="wedSettleBtn" onclick="openWedSettle()" style="display:none;">💸 Registar acerto</button>
+            <div class="card-title">💰 Quanto cada um tira das prendas</div>
+            <p class="wed-hint" style="margin:-6px 0 12px;">Para recuperar o que pagou do próprio bolso. As prendas por MB que já estão na conta de cada um contam como já recebidas.</p>
+            <div class="wed-take" id="wedTakeJ"></div>
+            <div class="wed-take" id="wedTakeT"></div>
+            <div class="wed-ent-box">
+                <div class="wed-kv"><span>💵 Dinheiro junto agora</span><b id="wedCashNow">0.00€</b></div>
+                <div class="wed-kv big"><span>Depois de tirarem, sobra</span><b id="wedCashAfter">0.00€</b></div>
             </div>
         </div>
 
+        <!-- Divisão final -->
         <div class="card">
-            <div class="card-title">👥 Cada um</div>
-            <div class="wed-people">
-                <div class="wed-person j" id="wedPersonJ"></div>
-                <div class="wed-person t" id="wedPersonT"></div>
-            </div>
-            <p class="wed-hint">💵 <b>Dinheiro</b> e 🏦 <b>Banco</b>: quanto ficou a mais (+) ou a menos (−) com cada um, em notas e na conta, por causa do casamento. Inclui os acertos registados.</p>
+            <div class="card-title">⚖️ Divisão final (lucro a meias)</div>
+            <p class="wed-hint" style="margin:-6px 0 12px;" id="wedFinalHint">Cada um recupera o que pagou e fica com metade do lucro.</p>
+            <div id="wedFinal"></div>
+        </div>
+
+        <!-- Prendas -->
+        <div class="card">
+            <div class="card-title">🎁 Prendas</div>
+            <div class="wed-kv big"><span>Total recebido</span><b class="pos" id="wedTotRec">0.00€</b></div>
+            <div class="wed-kv"><span>💵 Dinheiro (junto)</span><b id="wedRecDin">0.00€</b></div>
+            <div class="wed-kv"><span>🏦 MB na conta da Joana</span><b id="wedRecJ">0.00€</b></div>
+            <div class="wed-kv"><span>🏦 MB na conta do Toni</span><b id="wedRecT">0.00€</b></div>
+            <div class="wed-kv muted"><span>Nº de prendas</span><b id="wedRecN">0</b></div>
+        </div>
+
+        <!-- Despesas -->
+        <div class="card">
+            <div class="card-title">🧾 Despesas</div>
+            <div class="wed-kv big"><span>Total de despesas</span><b class="neg" id="wedTotDesp">0.00€</b></div>
+            <div class="wed-sec">Pago pela Joana (próprio)</div>
+            <div class="wed-kv"><span>💵 Dinheiro · 🏦 MB</span><b id="wedDespJ">0.00€</b></div>
+            <div class="wed-sec">Pago pelo Toni (próprio)</div>
+            <div class="wed-kv"><span>💵 Dinheiro · 🏦 MB</span><b id="wedDespT">0.00€</b></div>
+            <div class="wed-sec">Pago com dinheiro das prendas</div>
+            <div class="wed-kv"><span>💵 Dinheiro junto</span><b id="wedDespPDin">0.00€</b></div>
+            <div class="wed-kv"><span>🏦 MB da conta da Joana</span><b id="wedDespPJ">0.00€</b></div>
+            <div class="wed-kv"><span>🏦 MB da conta do Toni</span><b id="wedDespPT">0.00€</b></div>
         </div>
 
         <div class="card" id="wedCatCard" style="display:none;">
@@ -794,22 +846,24 @@
 
         <div class="card">
             <div class="card-title">📋 Movimentos</div>
+            <input type="search" id="wedSearch" placeholder="🔍 Procurar convidado ou despesa..." oninput="renderWed()" style="margin-bottom:8px;padding:11px 12px;font-size:0.85rem;">
             <div class="wed-filters">
                 <select id="wedFKind" onchange="renderWed()">
                     <option value="all">Tudo</option>
+                    <option value="receita">Prendas</option>
                     <option value="despesa">Despesas</option>
-                    <option value="receita">Receitas</option>
-                    <option value="acerto">Acertos</option>
+                    <option value="retirada">Retiradas</option>
                 </select>
                 <select id="wedFQuem" onchange="renderWed()">
-                    <option value="all">Ambos</option>
+                    <option value="all">Todos</option>
                     <option value="Joana">Joana</option>
                     <option value="Toni">Toni</option>
+                    <option value="prendas">Prendas/junto</option>
                 </select>
                 <select id="wedFMet" onchange="renderWed()">
-                    <option value="all">💵+🏦</option>
+                    <option value="all">💵 + 🏦</option>
                     <option value="dinheiro">💵 Dinheiro</option>
-                    <option value="banco">🏦 Conta/MB</option>
+                    <option value="banco">🏦 MB</option>
                 </select>
             </div>
             <div class="wed-filter-total" id="wedFTotal" style="margin-bottom:0;"></div>
@@ -914,45 +968,55 @@
     <div class="modal">
         <div class="modal-title" id="wedModalTitle">💍 Casamento</div>
         <div class="wed-kind-tabs">
+            <button id="wedKind-receita" onclick="setWedKind('receita')">🎁 Prenda</button>
             <button id="wedKind-despesa" onclick="setWedKind('despesa')">➖ Despesa</button>
-            <button id="wedKind-receita" onclick="setWedKind('receita')">➕ Receita</button>
-            <button id="wedKind-acerto" onclick="setWedKind('acerto')">💸 Acerto</button>
-        </div>
-        <div class="form-group">
-            <label>Data</label>
-            <input type="date" id="wedDate">
+            <button id="wedKind-retirada" onclick="setWedKind('retirada')">💸 Tirar</button>
         </div>
         <div class="form-group" id="wedDescGroup">
             <label id="wedDescLabel">Descrição</label>
-            <input type="text" id="wedDesc" placeholder="">
+            <input type="text" id="wedDesc" placeholder="" autocomplete="off">
         </div>
         <div class="form-group">
             <label>Valor (€)</label>
             <input type="number" id="wedVal" placeholder="0.00" step="0.01" inputmode="decimal">
         </div>
-        <div class="form-group">
-            <label id="wedQuemLabel">Quem pagou?</label>
-            <div class="quem-pills">
-                <button class="quem-pill" id="wedQuem-Joana" onclick="setWedQuem('Joana')">🔴 Joana</button>
-                <button class="quem-pill" id="wedQuem-Toni" onclick="setWedQuem('Toni')">🔵 Toni</button>
+        <div class="form-group" id="wedFonteGroup">
+            <label id="wedFonteLabel">Quem pagou?</label>
+            <div class="quem-pills wed-pills3">
+                <button class="quem-pill" id="wedFonte-Joana" onclick="setWedFonte('Joana')">🔴 Joana</button>
+                <button class="quem-pill" id="wedFonte-Toni" onclick="setWedFonte('Toni')">🔵 Toni</button>
+                <button class="quem-pill" id="wedFonte-prendas" onclick="setWedFonte('prendas')">🎁 Prendas</button>
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="wedMetGroup">
             <label id="wedMetLabel">Como?</label>
             <div class="quem-pills">
                 <button class="quem-pill" id="wedMet-dinheiro" onclick="setWedMet('dinheiro')">💵 Dinheiro</button>
-                <button class="quem-pill" id="wedMet-banco" onclick="setWedMet('banco')">🏦 <span id="wedBancoLabel">Conta</span></button>
+                <button class="quem-pill" id="wedMet-banco" onclick="setWedMet('banco')">🏦 MB</button>
             </div>
         </div>
+        <div class="form-group" id="wedContaGroup">
+            <label id="wedContaLabel">Para a conta de</label>
+            <div class="quem-pills">
+                <button class="quem-pill" id="wedConta-Joana" onclick="setWedConta('Joana')">🔴 Joana</button>
+                <button class="quem-pill" id="wedConta-Toni" onclick="setWedConta('Toni')">🔵 Toni</button>
+            </div>
+        </div>
+        <p class="wed-hint" id="wedFormHint" style="display:none;margin:-6px 0 14px;"></p>
         <div class="form-group" id="wedCatGroup">
             <label>Categoria</label>
             <select id="wedCat"></select>
         </div>
         <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="wedDate">
+        </div>
+        <div class="form-group">
             <label>📝 Nota (opcional)</label>
-            <input type="text" id="wedNota" placeholder="Ex: sinal, falta pagar o resto...">
+            <input type="text" id="wedNota" placeholder="">
         </div>
         <button class="btn" style="background:var(--wed);color:white;box-shadow:0 6px 20px rgba(196,69,105,0.3);margin-top:4px;" onclick="saveWed()">💾 Gravar</button>
+        <button class="btn" id="wedSaveNext" style="background:var(--wed-bg);color:var(--wed);margin-top:8px;" onclick="saveWed(true)">➕ Gravar e próxima prenda</button>
         <button class="btn btn-cancel" onclick="closeWedModal()">Cancelar</button>
     </div>
 </div>
@@ -2427,9 +2491,18 @@
 
     // ═══════════════════════════ CASAMENTO ═══════════════════════════
     // Coleção "casamento", independente de tudo o resto.
-    // Cada documento: { kind: 'despesa'|'receita'|'acerto', date, desc, val,
-    //   quem, metodo: 'dinheiro'|'banco', cat?, para? (acerto), nota? }
-    // Contas: o custo líquido (despesas − receitas) é dividido 50/50.
+    //  Prenda   { kind:'receita', desc: nome do convidado, val, metodo:'dinheiro'|'banco',
+    //             quem: 'Conjunto' (dinheiro junto) | 'Joana'|'Toni' (conta onde entrou o MB) }
+    //  Despesa  { kind:'despesa', desc, val, cat, fonte:'proprio'|'prendas', metodo:'dinheiro'|'banco',
+    //             quem: quem pagou (próprio) | conta de onde saiu (MB das prendas) | 'Conjunto' (dinheiro junto) }
+    //  Retirada { kind:'retirada', val, quem } → alguém tirou dinheiro do dinheiro junto
+    //
+    // Contas:
+    //  dinheiro junto = prendas em dinheiro − despesas pagas com ele − retiradas
+    //  B[n] = prendas MB na conta de n − despesas pagas com esse MB
+    //  own[n] = o que n pagou do próprio bolso
+    //  falta[n] = own[n] − B[n] − retiradas[n]  (> 0: ainda tem de tirar do dinheiro junto)
+    //  lucro = prendas − despesas;  lucro em MB = Σ max(B[n] − own[n], 0);  lucro em dinheiro = o resto
     window.wedRegistos = [];
     const WED_CATS = [
         { id: 'espaco',   icon: '🏰', label: 'Quinta / Espaço' },
@@ -2450,95 +2523,155 @@
     const sgn = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2) + '€';
     const cls = v => v > 0.004 ? 'pos' : v < -0.004 ? 'neg' : '';
     const other = p => p === 'Joana' ? 'Toni' : 'Joana';
-    const metLabel = r => r.metodo === 'dinheiro' ? '💵 Dinheiro' : (r.kind === 'receita' ? '🏦 MB' : '🏦 Conta');
+    const isP = n => n === 'Joana' || n === 'Toni';
+
+    // Lê um registo (incluindo os criados por versões anteriores) de forma uniforme.
+    function wedNorm(r) {
+        const v = Number(r.val) || 0;
+        const metodo = r.metodo === 'dinheiro' || r.metodo === 'entradas' ? 'dinheiro' : 'banco';
+        if (r.kind === 'receita') return { kind: 'receita', v, metodo, conta: metodo === 'banco' ? (isP(r.quem) ? r.quem : 'Joana') : null };
+        if (r.kind === 'despesa') {
+            const fonte = r.fonte === 'prendas' || r.metodo === 'entradas' ? 'prendas' : 'proprio';
+            return { kind: 'despesa', v, metodo, fonte,
+                quem: fonte === 'proprio' ? (isP(r.quem) ? r.quem : 'Joana') : (metodo === 'banco' ? (isP(r.quem) ? r.quem : 'Joana') : 'Conjunto') };
+        }
+        if (r.kind === 'retirada') return { kind: 'retirada', v, quem: isP(r.quem) ? r.quem : 'Joana' };
+        if (r.kind === 'acerto') return { kind: 'acerto', v, quem: isP(r.quem) ? r.quem : 'Joana', para: r.para || other(r.quem) };
+        return { kind: 'outro', v };
+    }
+
+    // Texto do método (aqui, no separador Tudo e no Excel)
+    function metText(r) {
+        const n = wedNorm(r);
+        if (n.kind === 'receita') return n.metodo === 'dinheiro' ? 'Dinheiro (junto)' : `MB conta ${n.conta}`;
+        if (n.kind === 'despesa') {
+            if (n.fonte === 'prendas') return n.metodo === 'dinheiro' ? 'Dinheiro das prendas' : `MB das prendas (conta ${n.quem})`;
+            return n.metodo === 'dinheiro' ? 'Dinheiro próprio' : 'MB próprio';
+        }
+        if (n.kind === 'retirada') return 'Tirou do dinheiro junto';
+        return 'Transferência';
+    }
+    const metLabel = r => {
+        const n = wedNorm(r);
+        const ic = n.kind === 'retirada' ? '💸 ' : (n.kind === 'despesa' && n.fonte === 'prendas' ? '🎁' : '') + (n.metodo === 'dinheiro' ? '💵 ' : '🏦 ');
+        return ic + metText(r);
+    };
+    const metTagCls = r => { const n = wedNorm(r); return n.kind === 'despesa' && n.fonte === 'prendas' ? 'tag-ent' : n.metodo === 'dinheiro' ? 'tag-din' : 'tag-ban'; };
+    window.metText = metText;
 
     (function initWedCats() {
         const sel = document.getElementById('wedCat');
         WED_CATS.forEach(c => sel.add(new Option(`${c.icon} ${c.label}`, c.id)));
     })();
 
-    // Calcula tudo a partir dos registos.
     function wedCompute(rows) {
         const P = {};
-        ['Joana', 'Toni'].forEach(n => P[n] = { pago: 0, recebido: 0, enviou: 0, recebeuAc: 0, din: 0, ban: 0 });
-        let desp = 0, rec = 0;
+        ['Joana', 'Toni'].forEach(n => P[n] = { ownDin: 0, ownBan: 0, mbIn: 0, mbOut: 0, ret: 0, adj: 0 });
+        const T = { recDin: 0, recBan: 0, nRec: 0, despProp: 0, despPDin: 0, despPBan: 0, cashOut: 0 };
         const cats = {};
         rows.forEach(r => {
-            const v = Number(r.val) || 0;
-            const p = P[r.quem]; if (!p) return;
-            const k = r.metodo === 'dinheiro' ? 'din' : 'ban';
-            if (r.kind === 'despesa') {
-                desp += v; p.pago += v; p[k] -= v;
-                cats[r.cat || 'outro'] = (cats[r.cat || 'outro'] || 0) + v;
-            } else if (r.kind === 'receita') {
-                rec += v; p.recebido += v; p[k] += v;
-            } else if (r.kind === 'acerto') {
-                const q = P[r.para || other(r.quem)]; if (!q) return;
-                p.enviou += v; p[k] -= v;
-                q.recebeuAc += v; q[k] += v;
+            const n = wedNorm(r);
+            if (n.kind === 'receita') {
+                T.nRec++;
+                if (n.metodo === 'dinheiro') T.recDin += n.v; else { T.recBan += n.v; P[n.conta].mbIn += n.v; }
+            } else if (n.kind === 'despesa') {
+                cats[r.cat || 'outro'] = (cats[r.cat || 'outro'] || 0) + n.v;
+                if (n.fonte === 'proprio') {
+                    T.despProp += n.v;
+                    if (n.metodo === 'dinheiro') P[n.quem].ownDin += n.v; else P[n.quem].ownBan += n.v;
+                } else if (n.metodo === 'dinheiro') T.despPDin += n.v;
+                else { T.despPBan += n.v; P[n.quem].mbOut += n.v; }
+            } else if (n.kind === 'retirada') {
+                P[n.quem].ret += n.v; T.cashOut += n.v;
+            } else if (n.kind === 'acerto') {     // registos antigos: transferência entre os dois
+                P[n.quem].adj += n.v; P[n.para].adj -= n.v;
             }
         });
-        // Contribuição líquida = o que cada um pôs do seu bolso.
-        for (const n in P) P[n].liq = P[n].pago - P[n].recebido + P[n].enviou - P[n].recebeuAc;
-        const custo = desp - rec;
-        const diff = (P.Joana.liq - P.Toni.liq) / 2;   // >0: Toni deve à Joana
-        return { P, desp, rec, custo, diff, cats };
+        const rec = T.recDin + T.recBan;
+        const desp = T.despProp + T.despPDin + T.despPBan;
+        const lucro = rec - desp;
+        let lucroBan = 0, sumFaltaPos = 0;
+        for (const n in P) {
+            const x = P[n];
+            x.own = x.ownDin + x.ownBan;
+            x.B = x.mbIn - x.mbOut;                      // prendas MB que ficaram na conta
+            x.falta = x.own - x.B - x.ret + x.adj;       // > 0: ainda tem de tirar
+            lucroBan += Math.max(x.B - x.own, 0);
+            sumFaltaPos += Math.max(x.falta, 0);
+            x.final = x.falta + lucro / 2;               // divisão final a meias
+        }
+        const cash = T.recDin - T.despPDin - T.cashOut;
+        return { P, T, rec, desp, lucro, lucroBan, lucroDin: lucro - lucroBan, cash, cashAfter: cash - sumFaltaPos, cats, custo: -lucro };
     }
     window.wedCompute = wedCompute;
+
+    const setT = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
 
     function renderWed() {
         const all = window.wedRegistos || [];
         const c = wedCompute(all);
 
-        // Cabeçalho
-        const lucro = c.custo < -0.004;
-        document.getElementById('wedSaldoLabel').innerText = lucro ? 'Sobrou do casamento' : 'Custo do casamento';
-        document.getElementById('wedSaldo').innerText = eur(Math.abs(c.custo));
-        document.getElementById('wedSaldoSub').innerText = lucro
-            ? `As receitas cobriram tudo · ${eur(Math.abs(c.custo) / 2)} para cada um`
-            : `Despesas menos receitas · ${eur(Math.abs(c.custo) / 2)} para cada um`;
-        document.getElementById('wedTotDesp').innerText = eur(c.desp);
-        document.getElementById('wedTotRec').innerText = eur(c.rec);
+        // ── Lucro ──
+        const neg = c.lucro < -0.004;
+        setT('wedSaldoLabel', neg ? 'Prejuízo do casamento' : 'Lucro do casamento');
+        setT('wedSaldo', eur(Math.abs(c.lucro)));
+        setT('wedSaldoSub', `Prendas ${eur(c.rec)} − despesas ${eur(c.desp)}`);
+        setT('wedLucroDin', sgn(c.lucroDin));
+        setT('wedLucroBan', sgn(c.lucroBan));
 
-        // Acerto
-        const t = document.getElementById('wedSettleTitle'), v = document.getElementById('wedSettleVal');
-        const sub = document.getElementById('wedSettleSub'), btn = document.getElementById('wedSettleBtn');
-        if (Math.abs(c.diff) < 0.01) {
-            t.innerText = '✅ Contas em dia';
-            v.innerText = '0.00€';
-            sub.innerText = all.length ? 'Os dois contribuíram exatamente o mesmo.' : 'Ainda sem movimentos.';
-            btn.style.display = 'none';
-        } else {
-            const dev = c.diff > 0 ? 'Toni' : 'Joana';
-            t.innerText = `${dev === 'Toni' ? '🔵 Toni deve à Joana' : '🔴 Joana deve ao Toni'}`;
-            v.innerText = eur(Math.abs(c.diff));
-            const desc = n => c.P[n].liq >= 0
-                ? `${n} pôs ${eur(c.P[n].liq)} do próprio bolso`
-                : `${n} ficou com ${eur(-c.P[n].liq)} a mais`;
-            const alvo = c.custo >= 0
-                ? `Cada um devia pôr ${eur(c.custo / 2)}.`
-                : `Cada um devia ficar com ${eur(-c.custo / 2)} a mais.`;
-            sub.innerText = `${desc('Joana')} e ${desc('Toni')}. ${alvo}`;
-            btn.style.display = 'block';
-            btn.innerText = `💸 Registar acerto de ${eur(Math.abs(c.diff))}`;
-        }
+        // ── Quanto cada um tira ──
+        ['Joana', 'Toni'].forEach(n => {
+            const x = c.P[n];
+            const el = document.getElementById(n === 'Joana' ? 'wedTakeJ' : 'wedTakeT');
+            el.className = 'wed-take ' + (n === 'Joana' ? 'j' : 't');
+            let res;
+            if (x.falta > 0.004) res = `<div class="wed-take-res"><span>➜ Tira do dinheiro junto</span><b class="neg">${eur(x.falta)}</b></div>
+                <button class="wed-take-btn" onclick="openWedRetirada('${n}', ${r2(x.falta)})">💸 Registar que ${n === 'Joana' ? 'a Joana' : 'o Toni'} tirou ${eur(x.falta)}</button>`;
+            else if (x.falta < -0.004) res = `<div class="wed-take-res"><span>${x.ret > 0.004 ? 'Já tirou a mais' : 'Tem na conta mais prendas do que pagou'}</span><b class="pos">${eur(-x.falta)}</b></div>
+                <div class="wed-hint" style="margin-top:4px;">${x.ret > 0.004 ? 'Tirou mais do que precisava.' : 'Não precisa de tirar nada. O que sobra conta como lucro em MB.'}</div>`;
+            else res = `<div class="wed-take-res"><span>✅ Já recuperou o que pagou</span><b>0.00€</b></div>`;
+            el.innerHTML = `<div class="wed-take-name">${n === 'Joana' ? '🔴' : '🔵'} ${n}</div>
+                <div class="wed-kv"><span>Pagou do próprio bolso (💵 ${eur(x.ownDin)} · 🏦 ${eur(x.ownBan)})</span><b>${eur(x.own)}</b></div>
+                <div class="wed-kv"><span>Prendas MB na conta${x.mbOut > 0.004 ? ` (${eur(x.mbIn)} − ${eur(x.mbOut)} já gastos)` : ''}</span><b>${x.B >= 0 ? '−' : '+'}${eur(Math.abs(x.B))}</b></div>
+                ${x.ret > 0.004 ? `<div class="wed-kv"><span>Já tirou do dinheiro junto</span><b>−${eur(x.ret)}</b></div>` : ''}
+                ${Math.abs(x.adj) > 0.004 ? `<div class="wed-kv"><span>Acertos antigos</span><b>${sgn(x.adj)}</b></div>` : ''}
+                ${res}`;
+        });
+        setT('wedCashNow', eur(c.cash));
+        setT('wedCashAfter', sgn(c.cashAfter));
+        document.getElementById('wedCashAfter').className = cls(c.cashAfter);
 
-        // Cada um
-        const person = n => {
-            const p = c.P[n];
-            const acRow = (p.enviou || p.recebeuAc)
-                ? `<div class="wed-row"><span>Acertos</span><b class="${cls(p.recebeuAc - p.enviou)}">${sgn(p.recebeuAc - p.enviou)}</b></div>` : '';
-            return `<div class="wed-person-name">${n === 'Joana' ? '🔴' : '🔵'} ${n}</div>
-                <div class="wed-row"><span>Pagou</span><b>${eur(p.pago)}</b></div>
-                <div class="wed-row"><span>Recebeu</span><b>${eur(p.recebido)}</b></div>
-                ${acRow}
-                <div class="wed-row total"><span>💵 Dinheiro</span><b class="${cls(p.din)}">${sgn(p.din)}</b></div>
-                <div class="wed-row"><span>🏦 Banco</span><b class="${cls(p.ban)}">${sgn(p.ban)}</b></div>`;
-        };
-        document.getElementById('wedPersonJ').innerHTML = person('Joana');
-        document.getElementById('wedPersonT').innerHTML = person('Toni');
+        // ── Divisão final ──
+        setT('wedFinalHint', c.lucro >= 0
+            ? `Cada um recupera o que pagou e fica com metade do lucro (${eur(c.lucro / 2)}).`
+            : `Cada um recupera o que pagou e suporta metade do prejuízo (${eur(-c.lucro / 2)}).`);
+        document.getElementById('wedFinal').innerHTML = ['Joana', 'Toni'].map(n => {
+            const x = c.P[n];
+            const tot = x.own + c.lucro / 2;
+            const sub = `Fica no total com ${eur(tot)} (pagou ${eur(x.own)} ${c.lucro >= 0 ? '+' : '−'} ${eur(Math.abs(c.lucro / 2))})` +
+                (Math.abs(x.B) > 0.004 ? ` · já tem ${eur(x.B)} de prendas na conta` : '') +
+                (x.ret > 0.004 ? ` · já tirou ${eur(x.ret)}` : '');
+            const val = x.final > 0.004 ? `<b class="neg">${eur(x.final)}</b>` : x.final < -0.004 ? `<b class="pos">${eur(-x.final)}</b>` : '<b>0.00€</b>';
+            const what = x.final > 0.004 ? 'tira do dinheiro junto' : x.final < -0.004 ? `tem a mais → passa ${n === 'Joana' ? 'ao Toni' : 'à Joana'} ou põe no dinheiro junto` : 'não tira nem dá nada';
+            return `<div class="wed-final"><div><div class="wed-final-name">${n === 'Joana' ? '🔴' : '🔵'} ${n} ${what}</div><div class="wed-final-sub">${sub}</div></div>${val}</div>`;
+        }).join('');
 
-        // Categorias
+        // ── Prendas ──
+        setT('wedTotRec', eur(c.rec));
+        setT('wedRecDin', eur(c.T.recDin));
+        setT('wedRecJ', eur(c.P.Joana.mbIn));
+        setT('wedRecT', eur(c.P.Toni.mbIn));
+        setT('wedRecN', String(c.T.nRec));
+
+        // ── Despesas ──
+        setT('wedTotDesp', eur(c.desp));
+        setT('wedDespJ', `${eur(c.P.Joana.ownDin)} · ${eur(c.P.Joana.ownBan)}`);
+        setT('wedDespT', `${eur(c.P.Toni.ownDin)} · ${eur(c.P.Toni.ownBan)}`);
+        setT('wedDespPDin', eur(c.T.despPDin));
+        setT('wedDespPJ', eur(c.P.Joana.mbOut));
+        setT('wedDespPT', eur(c.P.Toni.mbOut));
+
+        // ── Categorias ──
         const catEntries = Object.entries(c.cats).sort((a, b) => b[1] - a[1]);
         document.getElementById('wedCatCard').style.display = catEntries.length ? 'block' : 'none';
         const max = catEntries.length ? catEntries[0][1] : 1;
@@ -2548,39 +2681,42 @@
                 <div class="wed-bar"><i style="width:${Math.max(3, val / max * 100)}%"></i></div></div>`;
         }).join('');
 
-        // Lista
+        // ── Lista ──
         const fk = document.getElementById('wedFKind').value;
         const fq = document.getElementById('wedFQuem').value;
         const fm = document.getElementById('wedFMet').value;
-        const rows = all.filter(r =>
-            (fk === 'all' || r.kind === fk) &&
-            (fq === 'all' || r.quem === fq || (r.kind === 'acerto' && r.para === fq)) &&
-            (fm === 'all' || r.metodo === fm));
+        const q = normText(document.getElementById('wedSearch')?.value || '');
+        const rows = all.filter(r => {
+            const n = wedNorm(r);
+            if (fk !== 'all' && n.kind !== fk) return false;
+            if (fm !== 'all' && n.metodo !== fm) return false;
+            if (fq === 'prendas' && !((n.kind === 'receita') || (n.kind === 'despesa' && n.fonte === 'prendas'))) return false;
+            if (isP(fq) && !(n.quem === fq || n.conta === fq || n.para === fq)) return false;
+            if (q && !normText([r.desc, r.nota, wedCat(r.cat).label].join(' ')).includes(q)) return false;
+            return true;
+        });
         const list = document.getElementById('wedList');
-        const ft = document.getElementById('wedFTotal');
-        if (fk === 'all' && fq === 'all' && fm === 'all') {
-            ft.innerText = `${rows.length} movimento(s)`;
-        } else {
-            const d = rows.filter(r => r.kind === 'despesa').reduce((s, r) => s + Number(r.val), 0);
-            const rc = rows.filter(r => r.kind === 'receita').reduce((s, r) => s + Number(r.val), 0);
-            ft.innerText = `${rows.length} movimento(s) · despesas ${eur(d)} · receitas ${eur(rc)}`;
-        }
+        const d = rows.filter(r => r.kind === 'despesa').reduce((s, r) => s + Number(r.val), 0);
+        const rc = rows.filter(r => r.kind === 'receita').reduce((s, r) => s + Number(r.val), 0);
+        setT('wedFTotal', `${rows.length} movimento(s) · prendas ${eur(rc)} · despesas ${eur(d)}`);
         if (!rows.length) {
-            list.innerHTML = `<div class="empty"><div class="empty-icon">💍</div><div class="empty-text">${all.length ? 'Nenhum movimento com estes filtros' : 'Ainda sem movimentos. Começa por adicionar uma despesa ou receita.'}</div></div>`;
+            list.innerHTML = `<div class="empty"><div class="empty-icon">💍</div><div class="empty-text">${all.length ? 'Nenhum movimento com estes filtros' : 'Ainda sem movimentos. Começa por registar as prendas.'}</div></div>`;
             return;
         }
+        const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
         list.innerHTML = rows.map(r => {
-            const isAc = r.kind === 'acerto';
-            const icon = r.kind === 'despesa' ? wedCat(r.cat).icon : r.kind === 'receita' ? '🎁' : '💸';
-            const desc = isAc ? `Acerto: ${r.quem} → ${r.para || other(r.quem)}` : escHtml(r.desc);
-            const pTag = `<span class="tag ${r.quem === 'Joana' ? 'tag-j' : 'tag-t'}">${r.quem}</span>`;
-            const mTag = `<span class="tag ${r.metodo === 'dinheiro' ? 'tag-din' : 'tag-ban'}">${metLabel(r)}</span>`;
-            const valCls = r.kind === 'receita' ? 'rec' : r.kind === 'despesa' ? 'desp' : 'pay';
-            const sign = r.kind === 'receita' ? '+' : r.kind === 'despesa' ? '−' : '';
+            const n = wedNorm(r);
+            const icon = n.kind === 'despesa' ? wedCat(r.cat).icon : n.kind === 'receita' ? '🎁' : '💸';
+            const desc = n.kind === 'acerto' ? `Acerto: ${n.quem} → ${n.para}` : n.kind === 'retirada' ? `${n.quem} tirou do dinheiro junto` : escHtml(r.desc);
+            const who = n.kind === 'receita' ? (n.conta || 'Junto') : n.kind === 'despesa' && n.fonte === 'prendas' ? 'Prendas' : n.quem;
+            const pCls = who === 'Joana' ? 'tag-j' : who === 'Toni' ? 'tag-t' : 'tag-c';
+            const pTag = `<span class="tag ${pCls}">${who}</span>`;
+            const mTag = `<span class="tag ${metTagCls(r)}">${metLabel(r)}</span>`;
+            const valCls = n.kind === 'receita' ? 'rec' : n.kind === 'despesa' ? 'desp' : 'pay';
+            const sign = n.kind === 'receita' ? '+' : n.kind === 'despesa' ? '−' : '';
             const [yy, mm, dd] = (r.date || '').split('-');
-            const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
             const dShort = dd ? `${parseInt(dd)} ${meses[parseInt(mm) - 1]} ${yy}` : '';
-            return `<div class="wed-item" style="border-left-color:${r.kind === 'receita' ? 'var(--settle)' : r.kind === 'despesa' ? 'var(--danger)' : 'var(--wed)'}">
+            return `<div class="wed-item" style="border-left-color:${n.kind === 'receita' ? 'var(--settle)' : n.kind === 'despesa' ? 'var(--danger)' : 'var(--wed)'}">
                 <div class="item-icon">${icon}</div>
                 <div class="wed-item-main">
                     <div class="wed-item-top">
@@ -2602,82 +2738,130 @@
     window.renderWed = renderWed;
 
     // ── Formulário ──
-    window._wed = { kind: 'despesa', quem: 'Joana', metodo: 'banco', editing: null };
-    function setWedKind(k) {
-        window._wed.kind = k;
-        ['despesa', 'receita', 'acerto'].forEach(x => document.getElementById('wedKind-' + x).classList.toggle('active', x === k));
-        document.getElementById('wedDescGroup').style.display = k === 'acerto' ? 'none' : 'block';
-        document.getElementById('wedCatGroup').style.display = k === 'despesa' ? 'block' : 'none';
-        document.getElementById('wedDescLabel').innerText = k === 'receita' ? 'De quem / descrição' : 'Descrição';
-        document.getElementById('wedDesc').placeholder = k === 'receita' ? 'Ex: Prenda tios Porto, envelope padrinhos...' : 'Ex: Sinal da quinta, fotógrafo...';
-        document.getElementById('wedBancoLabel').innerText = k === 'receita' ? 'MB / Transf.' : k === 'acerto' ? 'Transferência' : 'Conta';
+    window._wed = { kind: 'receita', fonte: 'Joana', metodo: 'dinheiro', conta: 'Joana', editing: null };
+    const show = (id, on) => { document.getElementById(id).style.display = on ? '' : 'none'; };
+    const pick = (prefix, opts, val) => opts.forEach(x => document.getElementById(prefix + x).classList.toggle('active-on', x === val));
+
+    function refreshWedForm() {
+        const w = window._wed, k = w.kind;
+        ['receita', 'despesa', 'retirada'].forEach(x => document.getElementById('wedKind-' + x).classList.toggle('active', x === k));
         document.getElementById('wedModalTitle').innerText =
-            k === 'despesa' ? '💍 Despesa do casamento' : k === 'receita' ? '💍 Receita do casamento' : '💍 Acerto entre vocês';
-        setWedQuem(window._wed.quem);
+            k === 'receita' ? '🎁 Prenda' : k === 'despesa' ? '➖ Despesa do casamento' : '💸 Tirar do dinheiro junto';
+        show('wedDescGroup', k !== 'retirada');
+        document.getElementById('wedDescLabel').innerText = k === 'receita' ? 'Nome do convidado' : 'Descrição';
+        document.getElementById('wedDesc').placeholder = k === 'receita' ? 'Ex: Tia Rosa e Tio Zé' : 'Ex: Sinal da quinta, fotógrafo...';
+        document.getElementById('wedNota').placeholder = k === 'receita' ? 'Ex: mesa 4' : k === 'retirada' ? 'Ex: reembolso do fotógrafo' : 'Ex: sinal, falta pagar o resto...';
+        show('wedCatGroup', k === 'despesa');
+        show('wedSaveNext', k === 'receita' && !w.editing);
+
+        // Quem pagou / quem tirou
+        show('wedFonteGroup', k !== 'receita');
+        show('wedFonte-prendas', k === 'despesa');
+        if (k === 'retirada' && w.fonte === 'prendas') w.fonte = 'Joana';
+        document.getElementById('wedFonteLabel').innerText = k === 'retirada' ? 'Quem tirou?' : 'Quem pagou?';
+        pick('wedFonte-', ['Joana', 'Toni', 'prendas'], w.fonte);
+
+        // Dinheiro ou MB
+        show('wedMetGroup', k !== 'retirada');
+        document.getElementById('wedMetLabel').innerText = k === 'receita' ? 'Como deu?' : 'Pagou com';
+        pick('wedMet-', ['dinheiro', 'banco'], w.metodo);
+
+        // Conta (MB de prenda, ou MB das prendas usado para pagar)
+        const needConta = w.metodo === 'banco' && (k === 'receita' || (k === 'despesa' && w.fonte === 'prendas'));
+        show('wedContaGroup', needConta);
+        document.getElementById('wedContaLabel').innerText = k === 'receita' ? 'Para a conta de' : 'Saiu da conta de';
+        pick('wedConta-', ['Joana', 'Toni'], w.conta);
+
+        // Dica
+        const h = document.getElementById('wedFormHint');
+        let hint = '';
+        if (k === 'despesa' && w.fonte === 'prendas') {
+            const c = wedCompute((window.wedRegistos || []).filter(r => r.id !== w.editing));
+            hint = w.metodo === 'dinheiro' ? `🎁 Dinheiro junto disponível: <b>${eur(c.cash)}</b>`
+                : `🎁 Prendas MB na conta ${w.conta === 'Joana' ? 'da Joana' : 'do Toni'}: <b>${eur(c.P[w.conta].B)}</b>`;
+        } else if (k === 'despesa') {
+            hint = `${w.fonte} pagou do próprio bolso: vai recuperar este valor das prendas.`;
+        } else if (k === 'retirada') {
+            const c = wedCompute((window.wedRegistos || []).filter(r => r.id !== w.editing));
+            hint = `💵 Dinheiro junto: <b>${eur(c.cash)}</b> · ${w.fonte} ainda tem a tirar <b>${eur(Math.max(c.P[w.fonte].falta, 0))}</b>`;
+        } else if (k === 'receita' && w.metodo === 'dinheiro') {
+            hint = '💵 Vai para o dinheiro junto.';
+        }
+        h.style.display = hint ? 'block' : 'none';
+        h.innerHTML = hint;
     }
-    function setWedQuem(q) {
-        window._wed.quem = q;
-        ['Joana', 'Toni'].forEach(x => document.getElementById('wedQuem-' + x).classList.toggle('active-on', x === q));
-        const k = window._wed.kind;
-        document.getElementById('wedQuemLabel').innerText =
-            k === 'despesa' ? 'Quem pagou?' : k === 'receita' ? 'Quem recebeu?' : `Quem paga? (${q} → ${other(q)})`;
-        document.getElementById('wedMetLabel').innerText =
-            k === 'despesa' ? 'Pagou como?' : k === 'receita' ? 'Recebeu como?' : 'Como?';
-    }
-    function setWedMet(m) {
-        window._wed.metodo = m;
-        ['dinheiro', 'banco'].forEach(x => document.getElementById('wedMet-' + x).classList.toggle('active-on', x === m));
-    }
-    window.setWedKind = setWedKind; window.setWedQuem = setWedQuem; window.setWedMet = setWedMet;
+    function setWedKind(k) { window._wed.kind = k; refreshWedForm(); }
+    function setWedFonte(f) { window._wed.fonte = f; refreshWedForm(); }
+    function setWedMet(m) { window._wed.metodo = m; refreshWedForm(); }
+    function setWedConta(c) { window._wed.conta = c; refreshWedForm(); }
+    window.setWedKind = setWedKind; window.setWedFonte = setWedFonte; window.setWedMet = setWedMet; window.setWedConta = setWedConta;
 
     function openWedForm(kind, preset) {
-        window._wed.editing = null;
+        const w = window._wed;
+        w.editing = null;
+        w.kind = kind;
+        if (preset?.fonte) w.fonte = preset.fonte;
+        if (preset?.metodo) w.metodo = preset.metodo; else if (!preset) w.metodo = kind === 'receita' ? 'dinheiro' : 'banco';
+        if (preset?.conta) w.conta = preset.conta;
         document.getElementById('wedDate').value = todayISO();
         document.getElementById('wedDesc').value = '';
-        document.getElementById('wedVal').value = preset?.val != null ? preset.val.toFixed(2) : '';
+        document.getElementById('wedVal').value = preset?.val != null ? Number(preset.val).toFixed(2) : '';
         document.getElementById('wedNota').value = '';
         document.getElementById('wedCat').value = 'espaco';
-        window._wed.quem = preset?.quem || window._wed.quem || 'Joana';
-        setWedKind(kind);
-        setWedMet(preset?.metodo || (kind === 'receita' ? 'dinheiro' : 'banco'));
+        refreshWedForm();
         document.getElementById('wedModal').classList.add('open');
-        if (!preset) setTimeout(() => document.getElementById(kind === 'acerto' ? 'wedVal' : 'wedDesc').focus(), 250);
+        if (!preset) setTimeout(() => document.getElementById('wedDesc').focus(), 250);
     }
+    function openWedRetirada(quem, val) { openWedForm('retirada', { fonte: quem, val }); }
     function closeWedModal() {
         document.getElementById('wedModal').classList.remove('open');
         window._wed.editing = null;
     }
-    function openWedSettle() {
-        const c = wedCompute(window.wedRegistos || []);
-        if (Math.abs(c.diff) < 0.01) return;
-        openWedForm('acerto', { val: Math.abs(c.diff), quem: c.diff > 0 ? 'Toni' : 'Joana', metodo: 'banco' });
-    }
-    window.openWedForm = openWedForm; window.closeWedModal = closeWedModal; window.openWedSettle = openWedSettle;
+    window.openWedForm = openWedForm; window.closeWedModal = closeWedModal; window.openWedRetirada = openWedRetirada;
 
-    async function saveWed() {
-        const w = window._wed;
-        const data = {
-            kind: w.kind,
-            date: document.getElementById('wedDate').value,
-            desc: w.kind === 'acerto' ? 'Acerto' : document.getElementById('wedDesc').value.trim(),
-            val: Math.round(parseFloat(document.getElementById('wedVal').value) * 100) / 100,
-            quem: w.quem,
-            metodo: w.metodo,
-            cat: w.kind === 'despesa' ? document.getElementById('wedCat').value : null,
-            para: w.kind === 'acerto' ? other(w.quem) : null,
-            nota: document.getElementById('wedNota').value.trim() || null
-        };
-        if (!data.date || !data.desc || isNaN(data.val) || data.val <= 0) return alert('Preenche a data, a descrição e um valor maior que 0.');
+    async function saveWed(next) {
+        const w = window._wed, k = w.kind;
+        const val = Math.round(parseFloat(document.getElementById('wedVal').value) * 100) / 100;
+        const data = { kind: k, date: document.getElementById('wedDate').value, val,
+            nota: document.getElementById('wedNota').value.trim() || null, cat: null, fonte: null, para: null };
+        if (k === 'receita') {
+            data.desc = document.getElementById('wedDesc').value.trim();
+            data.metodo = w.metodo;
+            data.quem = w.metodo === 'dinheiro' ? 'Conjunto' : w.conta;
+        } else if (k === 'despesa') {
+            data.desc = document.getElementById('wedDesc').value.trim();
+            data.metodo = w.metodo;
+            data.cat = document.getElementById('wedCat').value;
+            if (w.fonte === 'prendas') { data.fonte = 'prendas'; data.quem = w.metodo === 'dinheiro' ? 'Conjunto' : w.conta; }
+            else { data.fonte = 'proprio'; data.quem = w.fonte; }
+        } else {
+            data.desc = 'Tirou do dinheiro junto';
+            data.metodo = 'dinheiro';
+            data.quem = w.fonte;
+        }
+        if (!data.date || !data.desc || isNaN(val) || val <= 0)
+            return alert(k === 'receita' ? 'Preenche o nome do convidado e o valor.' : 'Preenche a descrição e um valor maior que 0.');
+        const c = wedCompute((window.wedRegistos || []).filter(r => r.id !== w.editing));
+        if (k === 'retirada' && val > c.cash + 0.004 && !confirm(`Só há ${eur(c.cash)} no dinheiro junto.\n\nGravar mesmo assim?`)) return;
+        if (k === 'despesa' && data.fonte === 'prendas') {
+            const avail = data.metodo === 'dinheiro' ? c.cash : c.P[data.quem].B;
+            if (val > avail + 0.004 && !confirm(`Só há ${eur(avail)} ${data.metodo === 'dinheiro' ? 'no dinheiro junto' : 'de prendas MB nessa conta'}.\n\nGravar mesmo assim?`)) return;
+        }
         try {
             const { db, doc, collection, addDoc, updateDoc } = window._fb;
             if (w.editing) {
                 await updateDoc(doc(db, 'casamento', w.editing), withAuthor(data, false));
-                showToast('✅ Movimento atualizado');
+                showToast('✅ Atualizado');
             } else {
                 await addDoc(collection(db, 'casamento'), withAuthor(data, true));
-                showToast(data.kind === 'despesa' ? '➖ Despesa gravada' : data.kind === 'receita' ? '➕ Receita gravada' : '💸 Acerto gravado');
+                showToast(k === 'receita' ? `🎁 Prenda de ${data.desc} gravada` : k === 'despesa' ? '➖ Despesa gravada' : '💸 Retirada gravada');
             }
-            closeWedModal();
+            if (next && k === 'receita' && !w.editing) {
+                document.getElementById('wedDesc').value = '';
+                document.getElementById('wedVal').value = '';
+                document.getElementById('wedNota').value = '';
+                setTimeout(() => document.getElementById('wedDesc').focus(), 50);
+            } else closeWedModal();
         } catch (e) {
             console.error(e);
             alert('Erro ao gravar: ' + e.message + (String(e.code || e.message).includes('permission') ? '\n\nFalta autorizar a coleção "casamento" nas regras do Firestore.' : ''));
@@ -2686,13 +2870,21 @@
     function editWed(id) {
         const r = (window.wedRegistos || []).find(x => x.id === id);
         if (!r) return;
-        openWedForm(r.kind, { quem: r.quem, metodo: r.metodo });
+        const n = wedNorm(r);
+        if (n.kind === 'acerto') return alert('Este acerto é de uma versão anterior. Podes eliminá-lo e registar uma retirada.');
+        const preset = { metodo: n.metodo || 'dinheiro', val: n.v };
+        if (n.kind === 'receita') { if (n.conta) preset.conta = n.conta; }
+        else if (n.kind === 'despesa') {
+            if (n.fonte === 'prendas') { preset.fonte = 'prendas'; if (n.metodo === 'banco') preset.conta = n.quem; }
+            else preset.fonte = n.quem;
+        } else preset.fonte = n.quem;
+        openWedForm(n.kind, preset);
         window._wed.editing = id;
         document.getElementById('wedDate').value = r.date;
-        document.getElementById('wedDesc').value = r.kind === 'acerto' ? '' : r.desc;
-        document.getElementById('wedVal').value = Number(r.val).toFixed(2);
+        document.getElementById('wedDesc').value = n.kind === 'retirada' ? '' : (r.desc || '');
         document.getElementById('wedNota').value = r.nota || '';
         if (r.cat) document.getElementById('wedCat').value = r.cat;
+        refreshWedForm();
     }
     async function delWed(id) {
         if (!confirm('Eliminar este movimento do casamento?')) return;
@@ -2708,41 +2900,71 @@
 
     // ── Excel ──
     function wedRows() {
-        return (window.wedRegistos || []).slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(r => ({
-            'Data': r.date,
-            'Tipo': r.kind === 'despesa' ? 'Despesa' : r.kind === 'receita' ? 'Receita' : 'Acerto',
-            'Descrição': r.kind === 'acerto' ? `Acerto ${r.quem} → ${r.para || other(r.quem)}` : r.desc,
-            'Categoria': r.kind === 'despesa' ? wedCat(r.cat).label : '',
-            'Quem': r.quem,
-            'Para': r.kind === 'acerto' ? (r.para || other(r.quem)) : '',
-            'Método': r.metodo === 'dinheiro' ? 'Dinheiro' : (r.kind === 'receita' ? 'MB' : r.kind === 'acerto' ? 'Transferência' : 'Conta'),
-            'Valor (€)': Number(r.val),
-            'Nota': r.nota || '',
-            ...authorCols(r),
-            'ID': r.id
-        }));
+        return (window.wedRegistos || []).slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(r => {
+            const n = wedNorm(r);
+            return {
+                'Data': r.date,
+                'Tipo': n.kind === 'despesa' ? 'Despesa' : n.kind === 'receita' ? 'Prenda' : n.kind === 'retirada' ? 'Retirada' : 'Acerto',
+                'Convidado / Descrição': n.kind === 'retirada' ? `${n.quem} tirou do dinheiro junto` : n.kind === 'acerto' ? `Acerto ${n.quem} → ${n.para}` : r.desc,
+                'Categoria': n.kind === 'despesa' ? wedCat(r.cat).label : '',
+                'Quem / Conta': n.kind === 'receita' ? (n.conta || 'Dinheiro junto') : n.kind === 'despesa' && n.fonte === 'prendas' ? (n.metodo === 'dinheiro' ? 'Dinheiro junto' : n.quem) : n.quem,
+                'Pago com': n.kind === 'despesa' ? (n.fonte === 'prendas' ? 'Prendas' : 'Próprio') : '',
+                'Método': metText(r),
+                'Valor (€)': Number(r.val),
+                'Nota': r.nota || '',
+                ...authorCols(r),
+                'ID': r.id
+            };
+        });
     }
     window.wedRows = wedRows;
     function exportWedExcel() {
         const rows = wedRows();
         if (!rows.length) return alert('Ainda não há movimentos do casamento.');
         const c = wedCompute(window.wedRegistos || []);
+        const R = (k, v) => ({ 'Resumo': k, 'Valor (€)': typeof v === 'number' ? r2(v) : v });
+        const blank = R('', '');
         const resumo = [
-            { 'Resumo': 'Total despesas', 'Valor (€)': +c.desp.toFixed(2) },
-            { 'Resumo': 'Total receitas', 'Valor (€)': +c.rec.toFixed(2) },
-            { 'Resumo': c.custo >= 0 ? 'Custo do casamento' : 'Sobrou', 'Valor (€)': +Math.abs(c.custo).toFixed(2) },
-            { 'Resumo': 'Cada um (50/50)', 'Valor (€)': +(c.custo / 2).toFixed(2) },
+            R(c.lucro >= 0 ? 'LUCRO DO CASAMENTO' : 'PREJUÍZO DO CASAMENTO', Math.abs(c.lucro)),
+            R('  Lucro em dinheiro', c.lucroDin),
+            R('  Lucro em MB', c.lucroBan),
+            blank,
+            R('PRENDAS', c.rec),
+            R('  Dinheiro (junto)', c.T.recDin),
+            R('  MB conta Joana', c.P.Joana.mbIn),
+            R('  MB conta Toni', c.P.Toni.mbIn),
+            R('  Nº de prendas', c.T.nRec),
+            blank,
+            R('DESPESAS', c.desp),
+            R('  Joana do próprio bolso (dinheiro)', c.P.Joana.ownDin),
+            R('  Joana do próprio bolso (MB)', c.P.Joana.ownBan),
+            R('  Toni do próprio bolso (dinheiro)', c.P.Toni.ownDin),
+            R('  Toni do próprio bolso (MB)', c.P.Toni.ownBan),
+            R('  Prendas: dinheiro junto', c.T.despPDin),
+            R('  Prendas: MB conta Joana', c.P.Joana.mbOut),
+            R('  Prendas: MB conta Toni', c.P.Toni.mbOut),
+            blank,
+            R('QUANTO CADA UM TIRA (recuperar o que pagou)', ''),
             ...['Joana', 'Toni'].flatMap(n => [
-                { 'Resumo': `${n}: pagou`, 'Valor (€)': +c.P[n].pago.toFixed(2) },
-                { 'Resumo': `${n}: recebeu`, 'Valor (€)': +c.P[n].recebido.toFixed(2) },
-                { 'Resumo': `${n}: dinheiro (+/−)`, 'Valor (€)': +c.P[n].din.toFixed(2) },
-                { 'Resumo': `${n}: banco (+/−)`, 'Valor (€)': +c.P[n].ban.toFixed(2) }
+                R(`  ${n}: pagou do próprio bolso`, c.P[n].own),
+                R(`  ${n}: prendas MB que ficaram na conta`, c.P[n].B),
+                R(`  ${n}: já tirou do dinheiro junto`, c.P[n].ret),
+                R(c.P[n].falta >= 0 ? `  ${n}: ainda tira do dinheiro junto` : `  ${n}: tem a mais`, Math.abs(c.P[n].falta))
             ]),
-            { 'Resumo': Math.abs(c.diff) < 0.01 ? 'Acerto: contas em dia' : `Acerto: ${c.diff > 0 ? 'Toni deve à Joana' : 'Joana deve ao Toni'}`, 'Valor (€)': +Math.abs(c.diff).toFixed(2) }
+            R('Dinheiro junto agora', c.cash),
+            R('Dinheiro junto depois de tirarem', c.cashAfter),
+            blank,
+            R('DIVISÃO FINAL (lucro a meias)', ''),
+            ...['Joana', 'Toni'].map(n => R(c.P[n].final >= 0 ? `  ${n} tira do dinheiro junto` : `  ${n} tem a mais (passa ao outro)`, Math.abs(c.P[n].final)))
         ];
+        const prendas = rows.filter(r => r.Tipo === 'Prenda').map(r => ({
+            'Convidado': r['Convidado / Descrição'], 'Valor (€)': r['Valor (€)'],
+            'Como': r['Método'], 'Data': r.Data, 'Nota': r.Nota
+        })).sort((a, b) => String(a.Convidado).localeCompare(String(b.Convidado), 'pt'));
         saveWorkbook(`casamento_${todayISO()}.xlsx`, [
-            ['Resumo', makeSheet(resumo, [28, 14])],
-            ['Movimentos', makeSheet(rows, [12, 10, 30, 20, 8, 8, 13, 11, 28, 13, 17, 12, 17, 24])]
+            ['Resumo', makeSheet(resumo, [44, 14])],
+            ['Prendas', makeSheet(prendas, [30, 11, 18, 12, 24])],
+            ['Movimentos', makeSheet(rows, [12, 10, 30, 20, 14, 10, 26, 11, 28, 13, 17, 12, 17, 24])]
         ]);
         showToast('📊 Excel exportado!');
     }
@@ -2842,7 +3064,7 @@
             const pCls = m.quem === 'Joana' ? 'tag-j' : m.quem === 'Toni' ? 'tag-t' : 'tag-c';
             const pTag = `<span class="tag ${pCls}">${escHtml(m.kind === 'acerto' ? `${m.quem} → ${m.para}` : m.quem)}</span>`;
             const aTag = `<span class="tag tag-area-${m.area}">${AREAS[m.area].icon} ${AREAS[m.area].label}</span>`;
-            const mTag = m.area === 'casamento' ? `<span class="tag ${m.metodo === 'dinheiro' ? 'tag-din' : 'tag-ban'}">${metLabel(m)}</span>` : '';
+            const mTag = m.area === 'casamento' ? `<span class="tag ${metTagCls(m)}">${metLabel(m)}</span>` : '';
             const rTag = m.recur ? '<span class="tag tag-recur">🔁</span>' : '';
             const valCls = m.kind === 'receita' ? 'rec' : m.kind === 'despesa' ? 'desp' : 'pay';
             const sign = m.kind === 'receita' ? '+' : m.kind === 'despesa' ? '−' : '';
@@ -2880,7 +3102,7 @@
             'Categoria': m.catLabel || '',
             'Quem': m.quem,
             'Para': m.para || '',
-            'Método': m.area === 'casamento' ? (m.metodo === 'dinheiro' ? 'Dinheiro' : m.kind === 'receita' ? 'MB' : m.kind === 'acerto' ? 'Transferência' : 'Conta') : '',
+            'Método': m.area === 'casamento' ? metText(m) : '',
             'Valor (€)': r2(m.val),
             'Recorrente': m.recur ? 'Sim' : '',
             'Nota': m.nota || '',
