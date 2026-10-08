@@ -318,36 +318,6 @@
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- MODAL ACERTO -->
-<div class="modal-overlay" id="settleModal">
-    <div class="modal">
-        <div class="modal-title">💸 Registar Acerto</div>
-        <p class="modal-sub" id="settle-modal-sub">Registar transferência para equilibrar as contas.</p>
-        <div class="settle-summary">
-            <div>
-                <div class="settle-from-to">De <strong id="settle-from">—</strong></div>
-                <div style="margin:4px 0;font-size:1.2rem;">↓</div>
-                <div class="settle-from-to">Para <strong id="settle-to">—</strong></div>
-            </div>
-            <div class="settle-amount-display" id="settle-modal-val">0.00€</div>
-        </div>
-        <div class="form-group">
-            <label>Valor a transferir (€)</label>
-            <input type="number" id="settleVal" placeholder="0.00" step="0.01">
-        </div>
-        <div class="form-group">
-            <label>Data</label>
-            <input type="date" id="settleDate">
-        </div>
-        <div class="form-group">
-            <label>Nota (opcional)</label>
-            <input type="text" id="settleDesc" placeholder="Ex: Acerto de Abril...">
-        </div>
-        <button class="btn btn-settle-save" onclick="window.saveSettle()">✅ Confirmar Acerto</button>
-        <button class="btn btn-cancel" onclick="closeSettleModal()">Cancelar</button>
-    </div>
-</div>
-
 <!-- APP -->
 <div id="app-content" style="display:none;">
 
@@ -375,7 +345,7 @@
             </div>
         </div>
 
-        <button class="settle-cta hidden" id="settleCta" onclick="openSettleModal()">
+        <button class="settle-cta hidden" id="settleCta" onclick="openAcertoFromBalance()">
             <div>
                 <div class="settle-cta-label">🔄 Acertar Contas</div>
                 <div class="settle-cta-main" id="settle-cta-text">Transferência necessária</div>
@@ -444,13 +414,9 @@
     <div id="tab-novo" class="section">
         <div class="page-header"><h1 class="page-title" id="titleForm">Novo Registo</h1></div>
         <div class="card">
-            <div class="form-group">
-                <label>Tipo</label>
-                <div class="type-pills">
-                    <button class="type-pill active-exp" id="pill-exp" onclick="setType('EXP')">💳 Despesa 50/50</button>
-                    <button class="type-pill" id="pill-pay" onclick="setType('PAY')">💸 Acerto de Contas</button>
-                </div>
-                <input type="hidden" id="inType" value="EXP">
+            <input type="hidden" id="inType" value="EXP">
+            <div style="background:#f4f5f8;border-radius:14px;padding:12px 14px;margin-bottom:16px;font-size:0.8rem;color:var(--gray);">
+                💳 Aqui registam-se apenas despesas 50/50. Os pagamentos entre vocês são registados no separador <strong>Acertos</strong>.
             </div>
 
             <!-- Categorias (só visível em despesas) -->
@@ -510,6 +476,59 @@
         </div>
     </div>
 
+    <!-- ACERTOS -->
+    <div id="tab-acertos" class="section">
+        <div class="page-header">
+            <h1 class="page-title">💸 Acertos</h1>
+            <span class="user-badge" id="countAcertos">0</span>
+        </div>
+
+        <div class="card">
+            <div class="card-title" id="titleAcertoForm">Novo Acerto</div>
+            <div class="form-group">
+                <label>Data do pagamento</label>
+                <input type="date" id="acertoDate">
+            </div>
+            <div class="form-group">
+                <label>Quem paga?</label>
+                <select id="acertoQuem" onchange="syncAcertoDirection()">
+                    <option value="Toni">Toni</option>
+                    <option value="Joana">Joana</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>A quem?</label>
+                <select id="acertoPara" onchange="syncAcertoDirection()">
+                    <option value="Joana">Joana</option>
+                    <option value="Toni">Toni</option>
+                </select>
+            </div>
+            <div id="acertoDirection" style="background:var(--settle-bg);border-radius:14px;padding:12px 14px;margin-bottom:16px;font-size:0.85rem;font-weight:700;color:var(--settle);text-align:center;">
+                Toni → Joana
+            </div>
+            <div class="form-group">
+                <label>Valor (€)</label>
+                <input type="number" id="acertoVal" placeholder="0.00" step="0.01" min="0.01">
+            </div>
+            <div class="form-group">
+                <label>Nota (opcional)</label>
+                <input type="text" id="acertoNota" placeholder="Ex: Acerto de vários meses...">
+            </div>
+            <button class="btn btn-settle-save" onclick="saveAcerto()" id="btnSaveAcerto">💾 Registar Acerto</button>
+            <button id="btnCancelAcerto" class="btn btn-cancel" onclick="cancelAcertoEdit()" style="display:none;">Cancelar Edição</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Histórico de Acertos</div>
+            <div class="filter-group">
+                <select class="selMes" onchange="syncFilters(this)"></select>
+                <select class="selAno" onchange="syncFilters(this)"></select>
+            </div>
+            <div id="acertosResumo" style="font-size:0.8rem;color:var(--gray);margin-bottom:12px;"></div>
+            <div id="list-acertos"></div>
+        </div>
+    </div>
+
     <!-- LISTA -->
     <div id="tab-hist" class="section">
         <div class="page-header">
@@ -529,17 +548,6 @@
             </div>
             <div id="list-recur"></div>
             <hr class="divider">
-        </div>
-
-        <!-- Acertos -->
-        <div id="settle-history-section" style="display:none;">
-            <div class="list-section-header">
-                <div style="font-size:0.7rem;color:var(--gray);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;">✅ Acertos</div>
-                <span class="list-section-total" id="settle-period-total" style="color:var(--settle);"></span>
-            </div>
-            <div id="list-settle"></div>
-            <hr class="divider">
-            <div style="font-size:0.7rem;color:var(--gray);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:12px;">📋 Despesas</div>
         </div>
 
         <div id="list"></div>
@@ -609,6 +617,7 @@
         <button class="nav-item active" onclick="nav('home', this)"><span class="nav-icon">🏠</span>Casa</button>
         <button class="nav-item" onclick="nav('analise', this)"><span class="nav-icon">📊</span>Análise</button>
         <button class="nav-item" onclick="nav('novo', this)"><span class="nav-icon">➕</span>Novo</button>
+        <button class="nav-item" onclick="nav('acertos', this)"><span class="nav-icon">💸</span>Acertos</button>
         <button class="nav-item" onclick="nav('hist', this)"><span class="nav-icon">📜</span>Lista</button>
         <button class="nav-item obra-nav" onclick="nav('obra', this)"><span class="nav-icon">🏡</span>Quinta Guarda</button>
     </nav>
@@ -672,6 +681,7 @@
     window._obraDBReady = Promise.resolve(db);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
+    window._fb = { db, doc, collection, addDoc, updateDoc, deleteDoc, setDoc };
     const emailsPermitidos = ["joana1589@gmail.com", "tonizito.alves92@gmail.com"];
 
     window.registros = [];
@@ -703,9 +713,13 @@
     });
 
     function startListeners() {
-        onSnapshot(query(collection(db, "registos"), orderBy("date", "desc")), snap => {
+        onSnapshot(query(collection(db, "registos"), orderBy("date", "desc")), async snap => {
             window.registros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             render();
+            // Cria apenas as ocorrências mensais que estejam em falta.
+            // A ocorrência de cada mês é um registo independente, pelo que
+            // o valor pode ser alterado sem alterar meses anteriores.
+            await ensureRecurringOccurrences();
         });
         onSnapshot(doc(db, "settings", "config"), d => {
             if (d.exists()) {
@@ -774,45 +788,56 @@
 
     window.saveToCloud = async () => {
         const cat = document.getElementById('inCat').value;
+        const isExp = true;
+        document.getElementById('inType').value = 'EXP';
+        const isRecur = window._recurOn;
+        const date = document.getElementById('inDate').value;
         const data = {
             type: document.getElementById('inType').value,
-            date: document.getElementById('inDate').value,
+            date,
             desc: document.getElementById('inDesc').value || (cat ? CATS.find(c=>c.id===cat)?.label : ''),
             val: parseFloat(document.getElementById('inVal').value),
             quem: document.getElementById('inQuem').value,
             cat: cat || null,
-            recur: document.getElementById('inType').value === 'EXP' ? window._recurOn : false,
+            recur: isRecur,
             link: document.getElementById('inLink').value.trim() || null,
             nota: document.getElementById('inNota').value.trim() || null
         };
         if (!data.date || !data.desc || isNaN(data.val) || data.val <= 0) return alert("Preenche todos os campos!");
-        if (window.editingId) {
-            await updateDoc(doc(db, "registos", window.editingId), data);
-            window.editingId = null;
-            showToast("✅ Registo atualizado");
-        } else {
-            await addDoc(collection(db, "registos"), data);
-            showToast(data.type === 'PAY' ? "💸 Acerto registado!" : data.recur ? "🔁 Recorrente guardado!" : "✅ Despesa guardada");
+
+        try {
+            if (window.editingId) {
+                // Mantém a série da recorrência quando se edita uma ocorrência.
+                const old = window.registros.find(x => x.id === window.editingId);
+                if (isRecur) {
+                    data.recurKey = old?.recurKey || makeRecurKey();
+                    data.recurDay = old?.recurDay || parseInt(date.slice(8,10), 10);
+                } else {
+                    // Se o utilizador desligar a recorrência nesta ocorrência,
+                    // ela deixa de fazer parte da série, sem apagar informação.
+                    data.recurKey = null;
+                    data.recurDay = null;
+                }
+                await updateDoc(doc(db, "registos", window.editingId), data);
+                window.editingId = null;
+                showToast("✅ Registo atualizado");
+            } else {
+                if (isRecur) {
+                    data.recurKey = makeRecurKey();
+                    data.recurDay = parseInt(date.slice(8,10), 10);
+                }
+                await addDoc(collection(db, "registos"), data);
+                showToast(data.type === 'PAY' ? "💸 Acerto registado!" : data.recur ? "🔁 Recorrente guardado!" : "✅ Despesa guardada");
+            }
+            cancelEdit();
+            nav('hist', document.querySelector('.nav-item[onclick*="hist"]'));
+        } catch (e) {
+            console.error(e);
+            alert("Erro ao guardar: " + e.message);
         }
-        cancelEdit();
-        nav('hist', document.querySelector('.nav-item[onclick*="hist"]'));
     };
 
-    window.saveSettle = async () => {
-        const val = parseFloat(document.getElementById('settleVal').value);
-        const date = document.getElementById('settleDate').value;
-        const descInput = document.getElementById('settleDesc').value.trim();
-        const bal = window._currentBalance;
-        if (!date || isNaN(val) || val <= 0) return alert("Preenche o valor e a data!");
-        const quem = bal > 0 ? 'Toni' : 'Joana';
-        const para = bal > 0 ? 'Joana' : 'Toni';
-        await addDoc(collection(db, "registos"), {
-            type: 'PAY', date, val, quem, cat: null, recur: false,
-            desc: descInput || `Acerto — ${quem} → ${para}`
-        });
-        closeSettleModal();
-        showToast("💸 Acerto registado com sucesso!");
-    };
+    window.saveSettle = async () => { openAcertoFromBalance(); };
 
     window.delCloud = async (id) => {
         if (confirm("Eliminar este registo?")) {
@@ -830,17 +855,24 @@
 
     window.editCloud = (id) => {
         const r = window.registros.find(x => x.id === id);
+        if (!r) return;
+        if (r.type === 'PAY') {
+            editAcerto(id);
+            return;
+        }
         window.editingId = id;
-        setType(r.type);
+        window._recurOn = r.recur === true;
+        setType('EXP');
         document.getElementById('inDate').value = r.date;
         document.getElementById('inDesc').value = r.desc;
         document.getElementById('inVal').value = r.val;
         document.getElementById('inQuem').value = r.quem;
         document.getElementById('inLink').value = r.link || '';
         document.getElementById('inNota').value = r.nota || '';
-        if (r.cat) selectCat(r.cat);
-        if (r.recur) { window._recurOn = true; document.getElementById('recurToggle').classList.add('on'); }
-        document.getElementById('titleForm').innerText = "Editar Registo";
+        document.getElementById('inCat').value = r.cat || '';
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('selected', b.dataset.id === (r.cat || '')));
+        document.getElementById('recurToggle').classList.toggle('on', window._recurOn);
+        document.getElementById('titleForm').innerText = "Editar Despesa";
         document.getElementById('btnCancel').style.display = "block";
         nav('novo', document.querySelector('.nav-item[onclick*="novo"]'));
     };
@@ -898,6 +930,284 @@
         document.getElementById('recurToggle').classList.toggle('on', window._recurOn);
     }
 
+    // ═══ RECORRÊNCIA MENSAL ═══
+    // Cada ocorrência é um documento independente no Firestore.
+    // Assim, alterar o valor de um mês NÃO altera os meses anteriores.
+    window._creatingRecurring = false;
+
+    function makeRecurKey() {
+        if (window.crypto && crypto.randomUUID) return 'recur-' + crypto.randomUUID();
+        return 'recur-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    }
+
+    function monthKey(year, month) {
+        return `${year}-${String(month).padStart(2, '0')}`;
+    }
+
+    function nextMonth(year, month) {
+        if (month === 12) return { year: year + 1, month: 1 };
+        return { year, month: month + 1 };
+    }
+
+    function occurrenceDate(year, month, day) {
+        // Mantém o dia original; se o mês não tiver esse dia, usa o último dia.
+        const lastDay = new Date(year, month, 0).getDate();
+        const safeDay = Math.min(Math.max(1, day), lastDay);
+        return `${year}-${String(month).padStart(2, '0')}-${String(safeDay).padStart(2, '0')}`;
+    }
+
+    async function ensureRecurringOccurrences() {
+        if (window._creatingRecurring || !Array.isArray(window.registros) || !window.registros.length) return;
+
+        const recurring = window.registros.filter(r => r.type === 'EXP' && r.recur === true);
+        if (!recurring.length) return;
+
+        window._creatingRecurring = true;
+        try {
+            const now = new Date();
+            const targetYear = now.getFullYear();
+            const targetMonth = now.getMonth() + 1;
+
+            // Compatibilidade com as despesas recorrentes antigas:
+            // cada registo antigo sem recurKey passa a ser uma série própria.
+            const groups = new Map();
+            for (const r of recurring) {
+                let key = r.recurKey;
+                if (!key) {
+                    key = 'legacy-' + r.id;
+                    const day = parseInt((r.date || '').slice(8, 10), 10) || 1;
+                    await updateDoc(doc(db, "registos", r.id), {
+                        recurKey: key,
+                        recurDay: day
+                    });
+                    r.recurKey = key;
+                    r.recurDay = day;
+                } else if (!r.recurDay) {
+                    r.recurDay = parseInt((r.date || '').slice(8, 10), 10) || 1;
+                }
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key).push(r);
+            }
+
+            for (const [key, records] of groups) {
+                // Ordena cronologicamente. O último registo existente é a
+                // referência do valor mais recente.
+                records.sort((a, b) => a.date.localeCompare(b.date));
+
+                const first = records[0];
+                const anchorDay = parseInt(first.recurDay, 10) || parseInt(first.date.slice(8,10), 10) || 1;
+
+                const existingByMonth = new Map();
+                records.forEach(r => {
+                    existingByMonth.set(r.date.slice(0, 7), r);
+                });
+
+                let cursorYear = parseInt(first.date.slice(0, 4), 10);
+                let cursorMonth = parseInt(first.date.slice(5, 7), 10);
+
+                // Não cria ocorrências anteriores à data original.
+                while (cursorYear < targetYear || (cursorYear === targetYear && cursorMonth <= targetMonth)) {
+                    const mk = monthKey(cursorYear, cursorMonth);
+
+                    if (!existingByMonth.has(mk)) {
+                        // Usa a ocorrência existente mais recente anterior a este mês.
+                        const previous = records
+                            .filter(r => r.date.slice(0, 7) < mk)
+                            .sort((a, b) => b.date.localeCompare(a.date))[0];
+
+                        if (previous) {
+                            const newDate = occurrenceDate(cursorYear, cursorMonth, anchorDay);
+
+                            // ID determinístico = impossível criar duas ocorrências
+                            // do mesmo mês, mesmo com dois dispositivos abertos.
+                            const deterministicId = `${key}-${mk}`;
+                            const newRef = doc(db, "registos", deterministicId);
+
+                            const newData = {
+                                type: 'EXP',
+                                date: newDate,
+                                desc: previous.desc,
+                                val: Number(previous.val),
+                                quem: previous.quem,
+                                cat: previous.cat || null,
+                                recur: true,
+                                recurKey: key,
+                                recurDay: anchorDay,
+                                link: previous.link || null,
+                                nota: previous.nota || null
+                            };
+
+                            await setDoc(newRef, newData, { merge: false });
+                            existingByMonth.set(mk, { id: deterministicId, ...newData });
+                            records.push({ id: deterministicId, ...newData });
+                        }
+                    }
+
+                    const n = nextMonth(cursorYear, cursorMonth);
+                    cursorYear = n.year;
+                    cursorMonth = n.month;
+                }
+            }
+        } catch (e) {
+            console.error("Erro nas despesas recorrentes:", e);
+        } finally {
+            window._creatingRecurring = false;
+        }
+    }
+
+    // ═══ ACERTOS ═══
+    window.editingAcertoId = null;
+
+    function getPayDirection(r) {
+        if (r.quem === 'Joana') return r.para || 'Toni';
+        return r.para || 'Joana';
+    }
+
+    function syncAcertoDirection() {
+        const quem = document.getElementById('acertoQuem')?.value;
+        const para = document.getElementById('acertoPara')?.value;
+        const box = document.getElementById('acertoDirection');
+        if (!box) return;
+        if (quem === para) {
+            box.innerText = '⚠️ Escolhe pessoas diferentes';
+            box.style.color = 'var(--danger)';
+        } else {
+            box.innerText = `${quem} → ${para}`;
+            box.style.color = 'var(--settle)';
+        }
+    }
+    window.syncAcertoDirection = syncAcertoDirection;
+
+    function openAcertoFromBalance() {
+        const bal = Number(window._currentBalance || 0);
+        if (Math.abs(bal) < 0.01) return;
+        const quem = bal > 0 ? 'Toni' : 'Joana';
+        const para = bal > 0 ? 'Joana' : 'Toni';
+        resetAcertoForm();
+        document.getElementById('acertoQuem').value = quem;
+        document.getElementById('acertoPara').value = para;
+        document.getElementById('acertoVal').value = Math.abs(bal).toFixed(2);
+        document.getElementById('acertoDate').valueAsDate = new Date();
+        syncAcertoDirection();
+        nav('acertos', document.querySelector('.nav-item[onclick*="acertos"]'));
+    }
+    window.openAcertoFromBalance = openAcertoFromBalance;
+
+    function resetAcertoForm() {
+        window.editingAcertoId = null;
+        document.getElementById('titleAcertoForm').innerText = 'Novo Acerto';
+        document.getElementById('btnSaveAcerto').innerText = '💾 Registar Acerto';
+        document.getElementById('btnCancelAcerto').style.display = 'none';
+        document.getElementById('acertoDate').valueAsDate = new Date();
+        document.getElementById('acertoQuem').value = 'Toni';
+        document.getElementById('acertoPara').value = 'Joana';
+        document.getElementById('acertoVal').value = '';
+        document.getElementById('acertoNota').value = '';
+        syncAcertoDirection();
+    }
+
+    function cancelAcertoEdit(skipReset=false) {
+        resetAcertoForm();
+        if (!skipReset) showToast('↩️ Edição cancelada');
+    }
+    window.cancelAcertoEdit = cancelAcertoEdit;
+
+    window.saveAcerto = async () => {
+        const date = document.getElementById('acertoDate').value;
+        const quem = document.getElementById('acertoQuem').value;
+        const para = document.getElementById('acertoPara').value;
+        const val = parseFloat(document.getElementById('acertoVal').value);
+        const nota = document.getElementById('acertoNota').value.trim();
+        if (!date || !quem || !para || quem === para || isNaN(val) || val <= 0) {
+            return alert('Preenche a data, quem paga, a quem e um valor válido.');
+        }
+        const data = {
+            type: 'PAY',
+            date,
+            val,
+            quem,
+            para,
+            cat: null,
+            recur: false,
+            desc: nota || `Acerto — ${quem} → ${para}`,
+            nota: nota || null
+        };
+        try {
+            if (window.editingAcertoId) {
+                await window._fb.updateDoc(window._fb.doc(window._fb.db, 'registos', window.editingAcertoId), data);
+                showToast('✅ Acerto atualizado');
+            } else {
+                await window._fb.addDoc(window._fb.collection(window._fb.db, 'registos'), data);
+                showToast('💸 Acerto registado');
+            }
+            resetAcertoForm();
+            nav('acertos', document.querySelector('.nav-item[onclick*="acertos"]'));
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao guardar o acerto: ' + e.message);
+        }
+    };
+
+    window.editAcerto = (id) => {
+        const r = window.registros.find(x => x.id === id);
+        if (!r || r.type !== 'PAY') return;
+        const para = getPayDirection(r);
+        window.editingAcertoId = id;
+        document.getElementById('titleAcertoForm').innerText = 'Editar Acerto';
+        document.getElementById('btnSaveAcerto').innerText = '💾 Guardar Alterações';
+        document.getElementById('btnCancelAcerto').style.display = 'block';
+        document.getElementById('acertoDate').value = r.date || '';
+        document.getElementById('acertoQuem').value = r.quem || 'Toni';
+        document.getElementById('acertoPara').value = para;
+        document.getElementById('acertoVal').value = r.val ?? '';
+        document.getElementById('acertoNota').value = r.nota || (r.desc && !r.desc.startsWith('Acerto —') ? r.desc : '');
+        syncAcertoDirection();
+        nav('acertos', document.querySelector('.nav-item[onclick*="acertos"]'));
+    };
+
+    function renderAcertos() {
+        const list = document.getElementById('list-acertos');
+        if (!list) return;
+        const selMes = document.querySelector('#tab-acertos .selMes')?.value || 'all';
+        const selAno = document.querySelector('#tab-acertos .selAno')?.value || 'all';
+        const acertos = window.registros.filter(r => {
+            if (r.type !== 'PAY') return false;
+            const p = (r.date || '').split('-');
+            const mes = parseInt(p[1] || '0').toString();
+            return (selMes === 'all' || mes === selMes) && (selAno === 'all' || p[0] === selAno);
+        }).sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+
+        list.innerHTML = '';
+        document.getElementById('countAcertos').innerText = acertos.length;
+        const total = acertos.reduce((sum,r) => sum + Number(r.val || 0), 0);
+        document.getElementById('acertosResumo').innerText = `${acertos.length} acerto(s) · ${total.toFixed(2)}€ no período selecionado`;
+
+        if (!acertos.length) {
+            list.innerHTML = '<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Sem acertos neste período</div></div>';
+            return;
+        }
+        acertos.forEach(r => {
+            const para = getPayDirection(r);
+            const nota = r.nota || (r.desc && !r.desc.startsWith('Acerto —') ? r.desc : '');
+            const el = document.createElement('div');
+            el.className = 'item settle-item';
+            el.innerHTML = `
+                <div class="item-icon">💸</div>
+                <div class="item-data">
+                    <div class="item-desc">${escHtml(r.quem)} → ${escHtml(para)}</div>
+                    <div class="item-meta">${escHtml(r.date || '')} <span class="tag tag-settle">Acerto</span></div>
+                    ${nota ? `<div class="item-nota">📝 ${escHtml(nota)}</div>` : ''}
+                </div>
+                <div class="item-val pay">${Number(r.val || 0).toFixed(2)}€</div>
+                <div class="item-actions">
+                    <button class="btn-icon" onclick="editAcerto('${r.id}')">✏️</button>
+                    <button class="btn-icon" onclick="delCloud('${r.id}')">🗑️</button>
+                </div>`;
+            list.appendChild(el);
+        });
+    }
+    window.renderAcertos = renderAcertos;
+
     // ═══ NAV ═══
     let myCharts = {};
 
@@ -911,6 +1221,7 @@
         if (target) target.classList.add('active');
         if (el) el.classList.add('active');
         if (tab === 'obra') { renderObra(); return; }
+        if (tab === 'acertos') { render(); renderAcertos(); return; }
         render();
     }
 
@@ -919,17 +1230,20 @@
         const cls = el.classList.contains('selMes') ? '.selMes' : '.selAno';
         document.querySelectorAll(cls).forEach(s => s.value = val);
         render();
+        renderAcertos();
     }
 
     function setType(type) {
-        document.getElementById('inType').value = type;
         const isExp = type === 'EXP';
-        document.getElementById('pill-exp').className = 'type-pill' + (isExp ? ' active-exp' : '');
-        document.getElementById('pill-pay').className = 'type-pill' + (!isExp ? ' active-pay' : '');
-        document.getElementById('btnSave').className = 'btn ' + (isExp ? 'btn-save' : 'btn-settle-save');
-        document.getElementById('quemLabel').innerText = isExp ? 'Quem pagou?' : 'Quem transfere?';
-        document.getElementById('catGroup').style.display = isExp ? 'block' : 'none';
-        document.getElementById('recurGroup').style.display = isExp ? 'block' : 'none';
+        document.getElementById('inType').value = 'EXP';
+        const pillExp = document.getElementById('pill-exp');
+        const pillPay = document.getElementById('pill-pay');
+        if (pillExp) pillExp.className = 'type-pill active-exp';
+        if (pillPay) pillPay.className = 'type-pill';
+        document.getElementById('btnSave').className = 'btn btn-save';
+        document.getElementById('quemLabel').innerText = 'Quem pagou?';
+        document.getElementById('catGroup').style.display = 'block';
+        document.getElementById('recurGroup').style.display = 'block';
     }
 
     function cancelEdit() {
@@ -947,22 +1261,6 @@
         setType('EXP');
     }
 
-    function openSettleModal() {
-        const bal = window._currentBalance;
-        if (Math.abs(bal) < 0.01) return;
-        const devedor = bal > 0 ? 'Toni' : 'Joana';
-        const credor  = bal > 0 ? 'Joana' : 'Toni';
-        document.getElementById('settle-from').innerText = devedor;
-        document.getElementById('settle-to').innerText = credor;
-        document.getElementById('settle-modal-val').innerText = Math.abs(bal).toFixed(2) + '€';
-        document.getElementById('settle-modal-sub').innerText = `${devedor} deve ${Math.abs(bal).toFixed(2)}€ a ${credor}.`;
-        document.getElementById('settleVal').value = Math.abs(bal).toFixed(2);
-        document.getElementById('settleDate').valueAsDate = new Date();
-        document.getElementById('settleDesc').value = '';
-        document.getElementById('settleModal').classList.add('open');
-    }
-    function closeSettleModal() { document.getElementById('settleModal').classList.remove('open'); }
-    document.getElementById('settleModal').addEventListener('click', e => { if (e.target === document.getElementById('settleModal')) closeSettleModal(); });
 
     function showToast(msg) {
         const t = document.getElementById('toast');
@@ -982,7 +1280,7 @@
         const el = document.createElement('div');
         el.className = 'item' + (isSettle ? ' settle-item' : isRecur ? ' recur-item' : '');
 
-        const personTag = `<span class="tag tag-${r.quem === 'Joana' ? 'j' : 't'}">${r.quem}</span>`;
+        const personTag = `<span class="tag tag-${r.quem === 'Joana' ? 'j' : 't'}">${r.type === 'PAY' ? `${r.quem} → ${getPayDirection(r)}` : r.quem}</span>`;
         const settleTag = isSettle ? `<span class="tag tag-settle">Acerto</span>` : '';
         const recurTag  = isRecur  ? `<span class="tag tag-recur">🔁 Recorrente</span>` : '';
 
@@ -1008,18 +1306,16 @@
 
     function render() {
         const listDiv    = document.getElementById('list');
-        const listSettle = document.getElementById('list-settle');
         const listRecur  = document.getElementById('list-recur');
         const selMes = document.querySelector('.selMes')?.value || "all";
         const selAno = document.querySelector('.selAno')?.value || "all";
 
         let gTJ=0, gTT=0, gPJ=0, gPT=0;
-        let fTJ=0, fTT=0, fPJ=0, fPT=0;
-        let countExp=0, countPay=0, countRecur=0;
-        let settlePeriodTotal=0, recurPeriodTotal=0;
+        let fTJ=0, fTT=0;
+        let countExp=0, countRecur=0;
+        let recurPeriodTotal=0;
 
         if (listDiv)    listDiv.innerHTML = '';
-        if (listSettle) listSettle.innerHTML = '';
         if (listRecur)  listRecur.innerHTML = '';
 
         window.registros.forEach(r => {
@@ -1028,26 +1324,24 @@
 
             // Global totals (all time)
             if (r.type === 'EXP') {
-                if (r.quem === 'Joana') gTJ += r.val; else gTT += r.val;
-            } else {
-                if (r.quem === 'Joana') gPJ += r.val; else gPT += r.val;
+                if (r.quem === 'Joana') gTJ += Number(r.val); else gTT += Number(r.val);
+            } else if (r.type === 'PAY') {
+                const para = getPayDirection(r);
+                if (r.quem === 'Joana' && para === 'Toni') gPJ += Number(r.val);
+                if (r.quem === 'Toni' && para === 'Joana') gPT += Number(r.val);
             }
 
             const inPeriod = (selMes === "all" || rM === selMes) && (selAno === "all" || rA === selAno);
             if (!inPeriod) return;
 
             if (r.type === 'EXP') {
-                if (r.quem === 'Joana') fTJ += r.val; else fTT += r.val;
+                if (r.quem === 'Joana') fTJ += Number(r.val); else fTT += Number(r.val);
             } else {
-                if (r.quem === 'Joana') fPJ += r.val; else fPT += r.val;
-                settlePeriodTotal += r.val;
-                countPay++;
+                return;
             }
 
             const el = createItem(r);
-            if (r.type === 'PAY' && listSettle) {
-                listSettle.appendChild(el);
-            } else if (r.type === 'EXP') {
+            if (r.type === 'EXP') {
                 countExp++;
                 if (r.recur && listRecur) {
                     countRecur++;
@@ -1060,12 +1354,7 @@
         });
 
         // Section visibility
-        const settleSection = document.getElementById('settle-history-section');
-        const recurSection  = document.getElementById('recur-section');
-        if (settleSection) {
-            settleSection.style.display = countPay > 0 ? 'block' : 'none';
-            document.getElementById('settle-period-total').innerText = settlePeriodTotal.toFixed(2) + '€';
-        }
+        const recurSection = document.getElementById('recur-section');
         if (recurSection) {
             recurSection.style.display = countRecur > 0 ? 'block' : 'none';
             document.getElementById('recur-period-total').innerText = recurPeriodTotal.toFixed(2) + '€';
@@ -1076,7 +1365,7 @@
             listDiv.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">Sem despesas neste período</div></div>';
         }
         if (document.getElementById('countReg')) {
-            document.getElementById('countReg').innerText = countExp + countPay;
+            document.getElementById('countReg').innerText = countExp;
         }
 
         // Totals
@@ -1120,6 +1409,7 @@
             : resM < -0.05 ? "Neste período, Joana deve ao Toni" : "Período equilibrado ✓";
 
         if (document.getElementById('tab-analise').classList.contains('active')) updateCharts(selMes, selAno);
+        renderAcertos();
     }
 
     // ═══ CHARTS ═══
@@ -1173,11 +1463,12 @@
             'Descrição': r.desc,
             'Categoria': r.cat ? CATS.find(c => c.id === r.cat)?.label || '' : '',
             'Quem': r.quem,
+            'Para': r.type === 'PAY' ? getPayDirection(r) : '',
             'Valor (€)': r.val,
             'Recorrente': r.recur ? 'Sim' : 'Não'
         }));
         const ws = XLSX.utils.json_to_sheet(data);
-        ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 28 }, { wch: 15 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
+        ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 28 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Finanças");
         XLSX.writeFile(wb, `financas_joana_toni.xlsx`);
@@ -1207,6 +1498,7 @@
                 <td>${tipo}</td>
                 <td>${icon} ${r.desc}${recTag}</td>
                 <td>${r.quem}</td>
+                <td>${r.type === 'PAY' ? getPayDirection(r) : ''}</td>
                 <td style="text-align:right;font-weight:700;">${r.val.toFixed(2)}€</td>
             </tr>`;
         }).join('');
@@ -1236,7 +1528,7 @@
             <div class="scard"><label>Total Acertos</label><b style="color:#27ae60">${totalPay.toFixed(2)}€</b></div>
         </div>
         <table>
-            <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Quem</th><th>Valor</th></tr></thead>
+            <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Quem</th><th>Para</th><th>Valor</th></tr></thead>
             <tbody>${rows}</tbody>
         </table>
         </body></html>`;
@@ -1306,12 +1598,17 @@
         });
         document.querySelectorAll('.selAno').forEach(s => {
             s.innerHTML = '<option value="all">Ano: Todos</option>';
-            [2024, 2025, 2026].forEach(a => s.add(new Option(a, a.toString(), false, a === now.getFullYear())));
+            const currentYear = now.getFullYear();
+            const years = [];
+            for (let a = 2024; a <= currentYear + 1; a++) years.push(a);
+            years.forEach(a => s.add(new Option(a, a.toString(), false, a === currentYear)));
         });
     }
     initSelects();
     document.getElementById('inDate').valueAsDate = new Date();
+    document.getElementById('acertoDate').valueAsDate = new Date();
     document.getElementById('obraDate').valueAsDate = new Date();
+    syncAcertoDirection();
 
     // ═══ OBRA UI ═══
     window.obraRegistos = [];
