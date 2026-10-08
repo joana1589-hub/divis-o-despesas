@@ -33,6 +33,8 @@
             --recur: #8e44ad;
             --recur-bg: #f5eefb;
             --obra: #e67e22;
+            --wed: #c44569;
+            --wed-bg: #fdf0f4;
             --obra-dark: #d35400;
             --obra-bg: #fef5ec;
             --obra-j: #f08080;
@@ -323,6 +325,68 @@
         .series-total { display: flex; justify-content: space-between; background: var(--recur-bg); color: var(--recur); border-radius: 12px; padding: 10px 14px; font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
         .btn-backup { background: var(--dark); color: white; margin-top: 10px; }
         .nav-item.obra-nav.active { color: var(--obra); background: rgba(230,126,34,0.08); }
+        .nav-item.wed-nav.active { color: var(--wed); background: rgba(196,69,105,0.08); }
+        /* 7 separadores: mais compactos */
+        .bottom-nav { padding: 0 4px; }
+        .nav-item { padding: 8px 2px; letter-spacing: 0.3px; font-size: 0.56rem; line-height: 1.15; text-align: center; min-width: 0; }
+        .nav-icon { font-size: 1.25rem; }
+
+        /* ═══ CASAMENTO ═══ */
+        .wed-header { background: linear-gradient(135deg, #c44569 0%, #8e3a59 100%); border-radius: var(--radius); padding: 24px 22px; margin-bottom: 16px; color: white; box-shadow: 0 10px 30px rgba(196,69,105,0.3); }
+        .wed-header-label { font-size: 0.68rem; text-transform: uppercase; opacity: 0.8; letter-spacing: 2px; margin-bottom: 10px; }
+        .wed-total { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; font-family: 'DM Mono', monospace; line-height: 1; }
+        .wed-total-sub { font-size: 0.8rem; opacity: 0.85; margin-top: 8px; }
+        .wed-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+        .wed-split div { background: rgba(255,255,255,0.14); border-radius: 12px; padding: 10px 12px; }
+        .wed-split span { display: block; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+        .wed-split b { font-family: 'DM Mono', monospace; font-size: 1.05rem; }
+        .wed-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .wed-btn { border: none; border-radius: 14px; padding: 14px 10px; font-weight: 800; font-size: 0.9rem; cursor: pointer; font-family: 'DM Sans', sans-serif; color: white; }
+        .wed-btn.desp { background: var(--danger); box-shadow: 0 6px 16px rgba(231,76,60,0.25); }
+        .wed-btn.rec { background: var(--settle); box-shadow: 0 6px 16px rgba(39,174,96,0.25); }
+        .wed-settle { background: var(--wed-bg); border: 1.5px solid #f0c4d2; border-radius: var(--radius); padding: 16px 18px; }
+        .wed-settle-title { font-weight: 800; font-size: 1rem; }
+        .wed-settle-val { font-family: 'DM Mono', monospace; font-weight: 800; font-size: 1.6rem; color: var(--wed); margin: 4px 0; }
+        .wed-settle-sub { font-size: 0.76rem; color: var(--gray); line-height: 1.4; }
+        .wed-settle-btn { margin-top: 12px; width: 100%; border: none; background: var(--wed); color: white; border-radius: 12px; padding: 12px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; }
+        .wed-people { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .wed-person { border-radius: 16px; padding: 14px; background: var(--bg); border-top: 4px solid var(--light-gray); }
+        .wed-person.j { border-color: var(--joana); }
+        .wed-person.t { border-color: var(--toni); }
+        .wed-person-name { font-weight: 800; font-size: 0.92rem; margin-bottom: 8px; }
+        .wed-row { display: flex; justify-content: space-between; font-size: 0.76rem; padding: 3px 0; gap: 6px; }
+        .wed-row span { color: var(--gray); }
+        .wed-row b { font-family: 'DM Mono', monospace; white-space: nowrap; }
+        .wed-row.total { border-top: 1px solid var(--light-gray); margin-top: 6px; padding-top: 7px; }
+        .wed-row.total span { color: var(--dark); font-weight: 700; }
+        .wed-hint { font-size: 0.72rem; color: var(--gray); margin-top: 10px; line-height: 1.4; }
+        .pos { color: var(--settle); } .neg { color: var(--danger); }
+        .wed-cat-row { margin-bottom: 10px; }
+        .wed-cat-top { display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; }
+        .wed-cat-top b { font-family: 'DM Mono', monospace; }
+        .wed-bar { height: 7px; background: var(--light-gray); border-radius: 10px; overflow: hidden; }
+        .wed-bar i { display: block; height: 100%; background: var(--wed); border-radius: 10px; }
+        .wed-filters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+        .wed-filters select { padding: 10px 8px; font-size: 0.8rem; }
+        .wed-filter-total { font-size: 0.78rem; color: var(--gray); margin-bottom: 10px; }
+        .wed-kind-tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; background: var(--bg); padding: 5px; border-radius: 14px; margin-bottom: 16px; }
+        .wed-kind-tabs button { border: none; background: none; padding: 10px 4px; border-radius: 10px; font-weight: 700; font-size: 0.82rem; cursor: pointer; color: var(--gray); font-family: 'DM Sans', sans-serif; }
+        .wed-kind-tabs button.active { background: white; box-shadow: var(--shadow); color: var(--dark); }
+        .quem-pill.active-on { background: rgba(196,69,105,0.08); border-color: var(--wed); color: var(--wed); }
+        .tag-din { background: #f4d03f; color: #6b5300; }
+        .tag-ban { background: #5d6d7e; color: white; }
+        .wed-item { background: white; border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; display: flex; gap: 10px; align-items: center; box-shadow: var(--shadow); border-left: 4px solid var(--light-gray); }
+        .wed-item .item-icon { margin-right: 0; }
+        .wed-item-main { flex: 1; min-width: 0; }
+        .wed-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+        .wed-item-top .item-desc { flex: 1; min-width: 0; }
+        .wed-item-top .item-val { margin-left: 0; }
+        .wed-item-bottom { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 5px; }
+        .wed-item-bottom .item-meta { margin-top: 0; }
+        .wed-item-bottom .item-actions { margin-left: 0; gap: 4px; flex-shrink: 0; }
+        .wed-item-bottom .btn-icon { padding: 6px 7px; font-size: 0.82rem; }
+        .item-val.rec { color: var(--settle); }
+        .item-val.desp { color: var(--danger); }
     </style>
 </head>
 <body>
@@ -657,6 +721,77 @@
         </div>
     </div>
 
+    <!-- CASAMENTO TAB (totalmente separado: coleção "casamento") -->
+    <div id="tab-casamento" class="section">
+        <div class="page-header">
+            <h1 class="page-title">💍 Casamento</h1>
+            <button onclick="exportWedExcel()" class="user-badge" style="border:none;cursor:pointer;">📊 Excel</button>
+        </div>
+
+        <div class="wed-header">
+            <div class="wed-header-label" id="wedSaldoLabel">Custo do casamento</div>
+            <div class="wed-total" id="wedSaldo">0.00€</div>
+            <div class="wed-total-sub" id="wedSaldoSub">Despesas menos receitas</div>
+            <div class="wed-split">
+                <div><span>Despesas</span><b id="wedTotDesp">0.00€</b></div>
+                <div><span>Receitas</span><b id="wedTotRec">0.00€</b></div>
+            </div>
+        </div>
+
+        <div class="wed-actions">
+            <button class="wed-btn desp" onclick="openWedForm('despesa')">➖ Despesa</button>
+            <button class="wed-btn rec" onclick="openWedForm('receita')">➕ Receita</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">⚖️ Acerto entre vocês (50/50)</div>
+            <div class="wed-settle">
+                <div class="wed-settle-title" id="wedSettleTitle">✅ Contas em dia</div>
+                <div class="wed-settle-val" id="wedSettleVal">0.00€</div>
+                <div class="wed-settle-sub" id="wedSettleSub">—</div>
+                <button class="wed-settle-btn" id="wedSettleBtn" onclick="openWedSettle()" style="display:none;">💸 Registar acerto</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">👥 Cada um</div>
+            <div class="wed-people">
+                <div class="wed-person j" id="wedPersonJ"></div>
+                <div class="wed-person t" id="wedPersonT"></div>
+            </div>
+            <p class="wed-hint">💵 <b>Dinheiro</b> e 🏦 <b>Banco</b>: quanto ficou a mais (+) ou a menos (−) com cada um, em notas e na conta, por causa do casamento. Inclui os acertos registados.</p>
+        </div>
+
+        <div class="card" id="wedCatCard" style="display:none;">
+            <div class="card-title">🧾 Despesas por categoria</div>
+            <div id="wedCats"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📋 Movimentos</div>
+            <div class="wed-filters">
+                <select id="wedFKind" onchange="renderWed()">
+                    <option value="all">Tudo</option>
+                    <option value="despesa">Despesas</option>
+                    <option value="receita">Receitas</option>
+                    <option value="acerto">Acertos</option>
+                </select>
+                <select id="wedFQuem" onchange="renderWed()">
+                    <option value="all">Ambos</option>
+                    <option value="Joana">Joana</option>
+                    <option value="Toni">Toni</option>
+                </select>
+                <select id="wedFMet" onchange="renderWed()">
+                    <option value="all">💵+🏦</option>
+                    <option value="dinheiro">💵 Dinheiro</option>
+                    <option value="banco">🏦 Conta/MB</option>
+                </select>
+            </div>
+            <div class="wed-filter-total" id="wedFTotal" style="margin-bottom:0;"></div>
+        </div>
+        <div id="wedList"></div>
+    </div>
+
     <!-- NAV -->
     <nav class="bottom-nav" id="main-nav">
         <button class="nav-item active" onclick="nav('home', this)"><span class="nav-icon">🏠</span>Casa</button>
@@ -665,6 +800,7 @@
         <button class="nav-item" onclick="nav('acertos', this)"><span class="nav-icon">💸</span>Acertos</button>
         <button class="nav-item" onclick="nav('hist', this)"><span class="nav-icon">📜</span>Lista</button>
         <button class="nav-item obra-nav" onclick="nav('obra', this)"><span class="nav-icon">🏡</span>Quinta Guarda</button>
+        <button class="nav-item wed-nav" onclick="nav('casamento', this)"><span class="nav-icon">💍</span>Casa&shy;mento</button>
     </nav>
 
 </div>
@@ -702,6 +838,54 @@
         </div>
         <button class="btn" style="background:var(--obra);color:white;box-shadow:0 6px 20px rgba(230,126,34,0.3);margin-top:4px;" onclick="saveObra()">💾 Gravar</button>
         <button class="btn btn-cancel" onclick="closeObraModal()">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL CASAMENTO -->
+<div class="modal-overlay" id="wedModal">
+    <div class="modal">
+        <div class="modal-title" id="wedModalTitle">💍 Casamento</div>
+        <div class="wed-kind-tabs">
+            <button id="wedKind-despesa" onclick="setWedKind('despesa')">➖ Despesa</button>
+            <button id="wedKind-receita" onclick="setWedKind('receita')">➕ Receita</button>
+            <button id="wedKind-acerto" onclick="setWedKind('acerto')">💸 Acerto</button>
+        </div>
+        <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="wedDate">
+        </div>
+        <div class="form-group" id="wedDescGroup">
+            <label id="wedDescLabel">Descrição</label>
+            <input type="text" id="wedDesc" placeholder="">
+        </div>
+        <div class="form-group">
+            <label>Valor (€)</label>
+            <input type="number" id="wedVal" placeholder="0.00" step="0.01" inputmode="decimal">
+        </div>
+        <div class="form-group">
+            <label id="wedQuemLabel">Quem pagou?</label>
+            <div class="quem-pills">
+                <button class="quem-pill" id="wedQuem-Joana" onclick="setWedQuem('Joana')">🔴 Joana</button>
+                <button class="quem-pill" id="wedQuem-Toni" onclick="setWedQuem('Toni')">🔵 Toni</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label id="wedMetLabel">Como?</label>
+            <div class="quem-pills">
+                <button class="quem-pill" id="wedMet-dinheiro" onclick="setWedMet('dinheiro')">💵 Dinheiro</button>
+                <button class="quem-pill" id="wedMet-banco" onclick="setWedMet('banco')">🏦 <span id="wedBancoLabel">Conta</span></button>
+            </div>
+        </div>
+        <div class="form-group" id="wedCatGroup">
+            <label>Categoria</label>
+            <select id="wedCat"></select>
+        </div>
+        <div class="form-group">
+            <label>📝 Nota (opcional)</label>
+            <input type="text" id="wedNota" placeholder="Ex: sinal, falta pagar o resto...">
+        </div>
+        <button class="btn" style="background:var(--wed);color:white;box-shadow:0 6px 20px rgba(196,69,105,0.3);margin-top:4px;" onclick="saveWed()">💾 Gravar</button>
+        <button class="btn btn-cancel" onclick="closeWedModal()">Cancelar</button>
     </div>
 </div>
 
@@ -811,6 +995,15 @@
         onSnapshot(query(collection(db, "obra"), orderBy("date", "desc")), snap => {
             window.obraRegistos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderObra();
+        });
+        // Casamento — coleção separada, não entra em nenhuma outra conta
+        onSnapshot(query(collection(db, "casamento"), orderBy("date", "desc")), snap => {
+            window.wedRegistos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderWed();
+        }, err => {
+            console.error('Casamento:', err);
+            const l = document.getElementById('wedList');
+            if (l) l.innerHTML = '<div class="empty"><div class="empty-icon">🔒</div><div class="empty-text">Sem acesso aos dados do casamento. Confirma as regras do Firestore (coleção "casamento").</div></div>';
         });
     }
 
@@ -1312,6 +1505,7 @@
         add(despesas, 'Despesas', [12,28,14,11,10,11,28,40,24,28,9,12], { 'Data': 'Sem registos' });
         add(acertos, 'Acertos', [12,8,8,10,28,24], { 'Data': 'Sem registos' });
         add(quinta, 'Quinta Guarda', [12,28,11,10,40,24], { 'Data': 'Sem registos' });
+        add(wedRows(), 'Casamento', [12,10,28,16,8,10,10,10,28,24], { 'Data': 'Sem registos' });
         add(definicoes, 'Definições', [24,22], {});
         add(marcadores, 'Recorrentes (interno)', [12,28,16,30], { 'Data': 'Sem registos' });
         XLSX.writeFile(wb, `copia_seguranca_financas_${todayISO()}.xlsx`);
@@ -1485,6 +1679,7 @@
         if (target) target.classList.add('active');
         if (el) el.classList.add('active');
         if (tab === 'obra') { renderObra(); return; }
+        if (tab === 'casamento') { renderWed(); return; }
         if (tab === 'acertos') { render(); renderAcertos(); return; }
         render();
     }
@@ -2013,6 +2208,329 @@
         });
     }
     window.renderObra = renderObra;
+
+    // ═══════════════════════════ CASAMENTO ═══════════════════════════
+    // Coleção "casamento", independente de tudo o resto.
+    // Cada documento: { kind: 'despesa'|'receita'|'acerto', date, desc, val,
+    //   quem, metodo: 'dinheiro'|'banco', cat?, para? (acerto), nota? }
+    // Contas: o custo líquido (despesas − receitas) é dividido 50/50.
+    window.wedRegistos = [];
+    const WED_CATS = [
+        { id: 'espaco',   icon: '🏰', label: 'Quinta / Espaço' },
+        { id: 'catering', icon: '🍽️', label: 'Catering / Bolo' },
+        { id: 'foto',     icon: '📸', label: 'Fotografia / Vídeo' },
+        { id: 'roupa',    icon: '👗', label: 'Vestido / Fato' },
+        { id: 'musica',   icon: '🎶', label: 'Música / DJ' },
+        { id: 'flores',   icon: '💐', label: 'Flores / Decoração' },
+        { id: 'aliancas', icon: '💍', label: 'Alianças' },
+        { id: 'convites', icon: '💌', label: 'Convites / Lembranças' },
+        { id: 'beleza',   icon: '💄', label: 'Cabelo / Maquilhagem' },
+        { id: 'igreja',   icon: '⛪', label: 'Igreja / Registo' },
+        { id: 'lua',      icon: '✈️', label: 'Lua de mel' },
+        { id: 'outro',    icon: '📦', label: 'Outro' }
+    ];
+    const wedCat = id => WED_CATS.find(c => c.id === id) || WED_CATS[WED_CATS.length - 1];
+    const eur = v => (Math.round(v * 100) / 100).toFixed(2) + '€';
+    const sgn = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + Math.abs(v).toFixed(2) + '€';
+    const cls = v => v > 0.004 ? 'pos' : v < -0.004 ? 'neg' : '';
+    const other = p => p === 'Joana' ? 'Toni' : 'Joana';
+    const metLabel = r => r.metodo === 'dinheiro' ? '💵 Dinheiro' : (r.kind === 'receita' ? '🏦 MB' : '🏦 Conta');
+
+    (function initWedCats() {
+        const sel = document.getElementById('wedCat');
+        WED_CATS.forEach(c => sel.add(new Option(`${c.icon} ${c.label}`, c.id)));
+    })();
+
+    // Calcula tudo a partir dos registos.
+    function wedCompute(rows) {
+        const P = {};
+        ['Joana', 'Toni'].forEach(n => P[n] = { pago: 0, recebido: 0, enviou: 0, recebeuAc: 0, din: 0, ban: 0 });
+        let desp = 0, rec = 0;
+        const cats = {};
+        rows.forEach(r => {
+            const v = Number(r.val) || 0;
+            const p = P[r.quem]; if (!p) return;
+            const k = r.metodo === 'dinheiro' ? 'din' : 'ban';
+            if (r.kind === 'despesa') {
+                desp += v; p.pago += v; p[k] -= v;
+                cats[r.cat || 'outro'] = (cats[r.cat || 'outro'] || 0) + v;
+            } else if (r.kind === 'receita') {
+                rec += v; p.recebido += v; p[k] += v;
+            } else if (r.kind === 'acerto') {
+                const q = P[r.para || other(r.quem)]; if (!q) return;
+                p.enviou += v; p[k] -= v;
+                q.recebeuAc += v; q[k] += v;
+            }
+        });
+        // Contribuição líquida = o que cada um pôs do seu bolso.
+        for (const n in P) P[n].liq = P[n].pago - P[n].recebido + P[n].enviou - P[n].recebeuAc;
+        const custo = desp - rec;
+        const diff = (P.Joana.liq - P.Toni.liq) / 2;   // >0: Toni deve à Joana
+        return { P, desp, rec, custo, diff, cats };
+    }
+    window.wedCompute = wedCompute;
+
+    function renderWed() {
+        const all = window.wedRegistos || [];
+        const c = wedCompute(all);
+
+        // Cabeçalho
+        const lucro = c.custo < -0.004;
+        document.getElementById('wedSaldoLabel').innerText = lucro ? 'Sobrou do casamento' : 'Custo do casamento';
+        document.getElementById('wedSaldo').innerText = eur(Math.abs(c.custo));
+        document.getElementById('wedSaldoSub').innerText = lucro
+            ? `As receitas cobriram tudo · ${eur(Math.abs(c.custo) / 2)} para cada um`
+            : `Despesas menos receitas · ${eur(Math.abs(c.custo) / 2)} para cada um`;
+        document.getElementById('wedTotDesp').innerText = eur(c.desp);
+        document.getElementById('wedTotRec').innerText = eur(c.rec);
+
+        // Acerto
+        const t = document.getElementById('wedSettleTitle'), v = document.getElementById('wedSettleVal');
+        const sub = document.getElementById('wedSettleSub'), btn = document.getElementById('wedSettleBtn');
+        if (Math.abs(c.diff) < 0.01) {
+            t.innerText = '✅ Contas em dia';
+            v.innerText = '0.00€';
+            sub.innerText = all.length ? 'Os dois contribuíram exatamente o mesmo.' : 'Ainda sem movimentos.';
+            btn.style.display = 'none';
+        } else {
+            const dev = c.diff > 0 ? 'Toni' : 'Joana';
+            t.innerText = `${dev === 'Toni' ? '🔵 Toni deve à Joana' : '🔴 Joana deve ao Toni'}`;
+            v.innerText = eur(Math.abs(c.diff));
+            const desc = n => c.P[n].liq >= 0
+                ? `${n} pôs ${eur(c.P[n].liq)} do próprio bolso`
+                : `${n} ficou com ${eur(-c.P[n].liq)} a mais`;
+            const alvo = c.custo >= 0
+                ? `Cada um devia pôr ${eur(c.custo / 2)}.`
+                : `Cada um devia ficar com ${eur(-c.custo / 2)} a mais.`;
+            sub.innerText = `${desc('Joana')} e ${desc('Toni')}. ${alvo}`;
+            btn.style.display = 'block';
+            btn.innerText = `💸 Registar acerto de ${eur(Math.abs(c.diff))}`;
+        }
+
+        // Cada um
+        const person = n => {
+            const p = c.P[n];
+            const acRow = (p.enviou || p.recebeuAc)
+                ? `<div class="wed-row"><span>Acertos</span><b class="${cls(p.recebeuAc - p.enviou)}">${sgn(p.recebeuAc - p.enviou)}</b></div>` : '';
+            return `<div class="wed-person-name">${n === 'Joana' ? '🔴' : '🔵'} ${n}</div>
+                <div class="wed-row"><span>Pagou</span><b>${eur(p.pago)}</b></div>
+                <div class="wed-row"><span>Recebeu</span><b>${eur(p.recebido)}</b></div>
+                ${acRow}
+                <div class="wed-row total"><span>💵 Dinheiro</span><b class="${cls(p.din)}">${sgn(p.din)}</b></div>
+                <div class="wed-row"><span>🏦 Banco</span><b class="${cls(p.ban)}">${sgn(p.ban)}</b></div>`;
+        };
+        document.getElementById('wedPersonJ').innerHTML = person('Joana');
+        document.getElementById('wedPersonT').innerHTML = person('Toni');
+
+        // Categorias
+        const catEntries = Object.entries(c.cats).sort((a, b) => b[1] - a[1]);
+        document.getElementById('wedCatCard').style.display = catEntries.length ? 'block' : 'none';
+        const max = catEntries.length ? catEntries[0][1] : 1;
+        document.getElementById('wedCats').innerHTML = catEntries.map(([id, val]) => {
+            const cat = wedCat(id);
+            return `<div class="wed-cat-row"><div class="wed-cat-top"><span>${cat.icon} ${cat.label}</span><b>${eur(val)}</b></div>
+                <div class="wed-bar"><i style="width:${Math.max(3, val / max * 100)}%"></i></div></div>`;
+        }).join('');
+
+        // Lista
+        const fk = document.getElementById('wedFKind').value;
+        const fq = document.getElementById('wedFQuem').value;
+        const fm = document.getElementById('wedFMet').value;
+        const rows = all.filter(r =>
+            (fk === 'all' || r.kind === fk) &&
+            (fq === 'all' || r.quem === fq || (r.kind === 'acerto' && r.para === fq)) &&
+            (fm === 'all' || r.metodo === fm));
+        const list = document.getElementById('wedList');
+        const ft = document.getElementById('wedFTotal');
+        if (fk === 'all' && fq === 'all' && fm === 'all') {
+            ft.innerText = `${rows.length} movimento(s)`;
+        } else {
+            const d = rows.filter(r => r.kind === 'despesa').reduce((s, r) => s + Number(r.val), 0);
+            const rc = rows.filter(r => r.kind === 'receita').reduce((s, r) => s + Number(r.val), 0);
+            ft.innerText = `${rows.length} movimento(s) · despesas ${eur(d)} · receitas ${eur(rc)}`;
+        }
+        if (!rows.length) {
+            list.innerHTML = `<div class="empty"><div class="empty-icon">💍</div><div class="empty-text">${all.length ? 'Nenhum movimento com estes filtros' : 'Ainda sem movimentos. Começa por adicionar uma despesa ou receita.'}</div></div>`;
+            return;
+        }
+        list.innerHTML = rows.map(r => {
+            const isAc = r.kind === 'acerto';
+            const icon = r.kind === 'despesa' ? wedCat(r.cat).icon : r.kind === 'receita' ? '🎁' : '💸';
+            const desc = isAc ? `Acerto: ${r.quem} → ${r.para || other(r.quem)}` : escHtml(r.desc);
+            const pTag = `<span class="tag ${r.quem === 'Joana' ? 'tag-j' : 'tag-t'}">${r.quem}</span>`;
+            const mTag = `<span class="tag ${r.metodo === 'dinheiro' ? 'tag-din' : 'tag-ban'}">${metLabel(r)}</span>`;
+            const valCls = r.kind === 'receita' ? 'rec' : r.kind === 'despesa' ? 'desp' : 'pay';
+            const sign = r.kind === 'receita' ? '+' : r.kind === 'despesa' ? '−' : '';
+            const [yy, mm, dd] = (r.date || '').split('-');
+            const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+            const dShort = dd ? `${parseInt(dd)} ${meses[parseInt(mm) - 1]} ${yy}` : '';
+            return `<div class="wed-item" style="border-left-color:${r.kind === 'receita' ? 'var(--settle)' : r.kind === 'despesa' ? 'var(--danger)' : 'var(--wed)'}">
+                <div class="item-icon">${icon}</div>
+                <div class="wed-item-main">
+                    <div class="wed-item-top">
+                        <div class="item-desc">${desc}</div>
+                        <div class="item-val ${valCls}">${sign}${Number(r.val).toFixed(2)}€</div>
+                    </div>
+                    <div class="wed-item-bottom">
+                        <div class="item-meta">${dShort} ${pTag} ${mTag}</div>
+                        <div class="item-actions">
+                            <button class="btn-icon" onclick="editWed('${r.id}')" aria-label="Editar">✏️</button>
+                            <button class="btn-icon" onclick="delWed('${r.id}')" aria-label="Eliminar">🗑️</button>
+                        </div>
+                    </div>
+                    ${r.nota ? `<div class="item-nota">📝 ${escHtml(r.nota)}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+    window.renderWed = renderWed;
+
+    // ── Formulário ──
+    window._wed = { kind: 'despesa', quem: 'Joana', metodo: 'banco', editing: null };
+    function setWedKind(k) {
+        window._wed.kind = k;
+        ['despesa', 'receita', 'acerto'].forEach(x => document.getElementById('wedKind-' + x).classList.toggle('active', x === k));
+        document.getElementById('wedDescGroup').style.display = k === 'acerto' ? 'none' : 'block';
+        document.getElementById('wedCatGroup').style.display = k === 'despesa' ? 'block' : 'none';
+        document.getElementById('wedDescLabel').innerText = k === 'receita' ? 'De quem / descrição' : 'Descrição';
+        document.getElementById('wedDesc').placeholder = k === 'receita' ? 'Ex: Prenda tios Porto, envelope padrinhos...' : 'Ex: Sinal da quinta, fotógrafo...';
+        document.getElementById('wedBancoLabel').innerText = k === 'receita' ? 'MB / Transf.' : k === 'acerto' ? 'Transferência' : 'Conta';
+        document.getElementById('wedModalTitle').innerText =
+            k === 'despesa' ? '💍 Despesa do casamento' : k === 'receita' ? '💍 Receita do casamento' : '💍 Acerto entre vocês';
+        setWedQuem(window._wed.quem);
+    }
+    function setWedQuem(q) {
+        window._wed.quem = q;
+        ['Joana', 'Toni'].forEach(x => document.getElementById('wedQuem-' + x).classList.toggle('active-on', x === q));
+        const k = window._wed.kind;
+        document.getElementById('wedQuemLabel').innerText =
+            k === 'despesa' ? 'Quem pagou?' : k === 'receita' ? 'Quem recebeu?' : `Quem paga? (${q} → ${other(q)})`;
+        document.getElementById('wedMetLabel').innerText =
+            k === 'despesa' ? 'Pagou como?' : k === 'receita' ? 'Recebeu como?' : 'Como?';
+    }
+    function setWedMet(m) {
+        window._wed.metodo = m;
+        ['dinheiro', 'banco'].forEach(x => document.getElementById('wedMet-' + x).classList.toggle('active-on', x === m));
+    }
+    window.setWedKind = setWedKind; window.setWedQuem = setWedQuem; window.setWedMet = setWedMet;
+
+    function openWedForm(kind, preset) {
+        window._wed.editing = null;
+        document.getElementById('wedDate').value = todayISO();
+        document.getElementById('wedDesc').value = '';
+        document.getElementById('wedVal').value = preset?.val != null ? preset.val.toFixed(2) : '';
+        document.getElementById('wedNota').value = '';
+        document.getElementById('wedCat').value = 'espaco';
+        window._wed.quem = preset?.quem || window._wed.quem || 'Joana';
+        setWedKind(kind);
+        setWedMet(preset?.metodo || (kind === 'receita' ? 'dinheiro' : 'banco'));
+        document.getElementById('wedModal').classList.add('open');
+        if (!preset) setTimeout(() => document.getElementById(kind === 'acerto' ? 'wedVal' : 'wedDesc').focus(), 250);
+    }
+    function closeWedModal() {
+        document.getElementById('wedModal').classList.remove('open');
+        window._wed.editing = null;
+    }
+    function openWedSettle() {
+        const c = wedCompute(window.wedRegistos || []);
+        if (Math.abs(c.diff) < 0.01) return;
+        openWedForm('acerto', { val: Math.abs(c.diff), quem: c.diff > 0 ? 'Toni' : 'Joana', metodo: 'banco' });
+    }
+    window.openWedForm = openWedForm; window.closeWedModal = closeWedModal; window.openWedSettle = openWedSettle;
+
+    async function saveWed() {
+        const w = window._wed;
+        const data = {
+            kind: w.kind,
+            date: document.getElementById('wedDate').value,
+            desc: w.kind === 'acerto' ? 'Acerto' : document.getElementById('wedDesc').value.trim(),
+            val: Math.round(parseFloat(document.getElementById('wedVal').value) * 100) / 100,
+            quem: w.quem,
+            metodo: w.metodo,
+            cat: w.kind === 'despesa' ? document.getElementById('wedCat').value : null,
+            para: w.kind === 'acerto' ? other(w.quem) : null,
+            nota: document.getElementById('wedNota').value.trim() || null
+        };
+        if (!data.date || !data.desc || isNaN(data.val) || data.val <= 0) return alert('Preenche a data, a descrição e um valor maior que 0.');
+        try {
+            const { db, doc, collection, addDoc, updateDoc } = window._fb;
+            if (w.editing) {
+                await updateDoc(doc(db, 'casamento', w.editing), data);
+                showToast('✅ Movimento atualizado');
+            } else {
+                await addDoc(collection(db, 'casamento'), data);
+                showToast(data.kind === 'despesa' ? '➖ Despesa gravada' : data.kind === 'receita' ? '➕ Receita gravada' : '💸 Acerto gravado');
+            }
+            closeWedModal();
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao gravar: ' + e.message + (String(e.code || e.message).includes('permission') ? '\n\nFalta autorizar a coleção "casamento" nas regras do Firestore.' : ''));
+        }
+    }
+    function editWed(id) {
+        const r = (window.wedRegistos || []).find(x => x.id === id);
+        if (!r) return;
+        openWedForm(r.kind, { quem: r.quem, metodo: r.metodo });
+        window._wed.editing = id;
+        document.getElementById('wedDate').value = r.date;
+        document.getElementById('wedDesc').value = r.kind === 'acerto' ? '' : r.desc;
+        document.getElementById('wedVal').value = Number(r.val).toFixed(2);
+        document.getElementById('wedNota').value = r.nota || '';
+        if (r.cat) document.getElementById('wedCat').value = r.cat;
+    }
+    async function delWed(id) {
+        if (!confirm('Eliminar este movimento do casamento?')) return;
+        try {
+            const { db, doc, deleteDoc } = window._fb;
+            await deleteDoc(doc(db, 'casamento', id));
+            showToast('🗑️ Eliminado');
+        } catch (e) { alert('Erro: ' + e.message); }
+    }
+    window.saveWed = saveWed; window.editWed = editWed; window.delWed = delWed;
+
+    document.getElementById('wedModal').addEventListener('click', e => { if (e.target.id === 'wedModal') closeWedModal(); });
+
+    // ── Excel ──
+    function wedRows() {
+        return (window.wedRegistos || []).slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(r => ({
+            'Data': r.date,
+            'Tipo': r.kind === 'despesa' ? 'Despesa' : r.kind === 'receita' ? 'Receita' : 'Acerto',
+            'Descrição': r.kind === 'acerto' ? `Acerto ${r.quem} → ${r.para || other(r.quem)}` : r.desc,
+            'Categoria': r.kind === 'despesa' ? wedCat(r.cat).label : '',
+            'Quem': r.quem,
+            'Para': r.kind === 'acerto' ? (r.para || other(r.quem)) : '',
+            'Método': r.metodo === 'dinheiro' ? 'Dinheiro' : (r.kind === 'receita' ? 'MB' : r.kind === 'acerto' ? 'Transferência' : 'Conta'),
+            'Valor (€)': Number(r.val),
+            'Nota': r.nota || '',
+            'ID': r.id
+        }));
+    }
+    window.wedRows = wedRows;
+    function exportWedExcel() {
+        const rows = wedRows();
+        if (!rows.length) return alert('Ainda não há movimentos do casamento.');
+        const c = wedCompute(window.wedRegistos || []);
+        const resumo = [
+            { 'Resumo': 'Total despesas', 'Valor (€)': +c.desp.toFixed(2) },
+            { 'Resumo': 'Total receitas', 'Valor (€)': +c.rec.toFixed(2) },
+            { 'Resumo': c.custo >= 0 ? 'Custo do casamento' : 'Sobrou', 'Valor (€)': +Math.abs(c.custo).toFixed(2) },
+            { 'Resumo': 'Cada um (50/50)', 'Valor (€)': +(c.custo / 2).toFixed(2) },
+            ...['Joana', 'Toni'].flatMap(n => [
+                { 'Resumo': `${n}: pagou`, 'Valor (€)': +c.P[n].pago.toFixed(2) },
+                { 'Resumo': `${n}: recebeu`, 'Valor (€)': +c.P[n].recebido.toFixed(2) },
+                { 'Resumo': `${n}: dinheiro (+/−)`, 'Valor (€)': +c.P[n].din.toFixed(2) },
+                { 'Resumo': `${n}: banco (+/−)`, 'Valor (€)': +c.P[n].ban.toFixed(2) }
+            ]),
+            { 'Resumo': Math.abs(c.diff) < 0.01 ? 'Acerto: contas em dia' : `Acerto: ${c.diff > 0 ? 'Toni deve à Joana' : 'Joana deve ao Toni'}`, 'Valor (€)': +Math.abs(c.diff).toFixed(2) }
+        ];
+        const wb = XLSX.utils.book_new();
+        const ws1 = XLSX.utils.json_to_sheet(rows); ws1['!cols'] = [12,10,30,20,8,8,13,10,28,24].map(w => ({ wch: w }));
+        const ws2 = XLSX.utils.json_to_sheet(resumo); ws2['!cols'] = [{ wch: 26 }, { wch: 12 }];
+        XLSX.utils.book_append_sheet(wb, ws2, 'Resumo');
+        XLSX.utils.book_append_sheet(wb, ws1, 'Movimentos');
+        XLSX.writeFile(wb, `casamento_${todayISO()}.xlsx`);
+    }
+    window.exportWedExcel = exportWedExcel;
 </script>
 </body>
 </html>
