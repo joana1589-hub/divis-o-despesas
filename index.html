@@ -786,8 +786,8 @@
             <div class="wed-total" id="wedSaldo">0.00€</div>
             <div class="wed-total-sub" id="wedSaldoSub">Prendas − despesas</div>
             <div class="wed-split">
-                <div><span>💵 Em dinheiro</span><b id="wedLucroDin">0.00€</b></div>
-                <div><span>🏦 Em MB</span><b id="wedLucroBan">0.00€</b></div>
+                <div><span>💵 Fica em mão</span><b id="wedLucroDin">0.00€</b></div>
+                <div><span>🏦 Para a conta conjunta</span><b id="wedLucroBan">0.00€</b></div>
             </div>
         </div>
 
@@ -796,23 +796,37 @@
             <button class="wed-btn desp" onclick="openWedForm('despesa')">➖ Despesa</button>
         </div>
 
-        <!-- Quanto cada um tira -->
+        <!-- Onde está o dinheiro agora -->
         <div class="card">
-            <div class="card-title">💰 Quanto cada um tira das prendas</div>
-            <p class="wed-hint" style="margin:-6px 0 12px;">Para recuperar o que pagou do próprio bolso. As prendas por MB que já estão na conta de cada um contam como já recebidas.</p>
-            <div class="wed-take" id="wedTakeJ"></div>
-            <div class="wed-take" id="wedTakeT"></div>
-            <div class="wed-ent-box">
-                <div class="wed-kv"><span>💵 Dinheiro junto agora</span><b id="wedCashNow">0.00€</b></div>
-                <div class="wed-kv big"><span>Depois de tirarem, sobra</span><b id="wedCashAfter">0.00€</b></div>
-            </div>
+            <div class="card-title">📍 Onde está o dinheiro agora</div>
+            <div class="wed-kv"><span>💵 Em mão (dinheiro junto)</span><b id="wedNowCash">0.00€</b></div>
+            <div class="wed-kv"><span>🏦 Prendas na conta da Joana</span><b id="wedNowJ">0.00€</b></div>
+            <div class="wed-kv"><span>🏦 Prendas na conta do Toni</span><b id="wedNowT">0.00€</b></div>
+            <div class="wed-kv big"><span>Total</span><b id="wedNowTot">0.00€</b></div>
+            <p class="wed-hint">Prendas recebidas, menos o que já foi pago com elas e o que já foi tirado.</p>
         </div>
 
-        <!-- Divisão final -->
+        <!-- Quanto cada um recupera -->
         <div class="card">
-            <div class="card-title">⚖️ Divisão final (lucro a meias)</div>
-            <p class="wed-hint" style="margin:-6px 0 12px;" id="wedFinalHint">Cada um recupera o que pagou e fica com metade do lucro.</p>
-            <div id="wedFinal"></div>
+            <div class="card-title">💰 Quanto cada um recupera</div>
+            <p class="wed-hint" style="margin:-6px 0 10px;">O que cada um pagou do próprio bolso volta para si. Escolhe se fica primeiro com as prendas MB que tem na sua conta (o resto tira do dinheiro em mão) ou se tira tudo do dinheiro em mão e as contas vão inteiras para a conjunta.</p>
+            <select id="wedModo" onchange="setWedModo(this.value)" style="margin-bottom:12px;padding:11px 12px;font-size:0.84rem;">
+                <option value="conta">Recuperar primeiro da própria conta</option>
+                <option value="mao">Recuperar tudo do dinheiro em mão</option>
+            </select>
+            <div class="wed-take" id="wedTakeJ"></div>
+            <div class="wed-take" id="wedTakeT"></div>
+        </div>
+
+        <!-- No fim -->
+        <div class="card" style="border:2px solid var(--wed);">
+            <div class="card-title">🏁 No fim</div>
+            <div class="wed-kv big"><span>💵 Fica em mão</span><b id="wedEndCash">0.00€</b></div>
+            <div class="wed-kv"><span>🏦 Joana transfere para a conta conjunta</span><b id="wedEndJ">0.00€</b></div>
+            <div class="wed-kv"><span>🏦 Toni transfere para a conta conjunta</span><b id="wedEndT">0.00€</b></div>
+            <div class="wed-kv big"><span>🏦 Total na conta conjunta</span><b id="wedEndConj">0.00€</b></div>
+            <div class="wed-kv big"><span id="wedEndLabel">Lucro total</span><b id="wedEndTot">0.00€</b></div>
+            <p class="wed-hint" id="wedEndHint"></p>
         </div>
 
         <!-- Prendas -->
@@ -2501,8 +2515,10 @@
     //  dinheiro junto = prendas em dinheiro − despesas pagas com ele − retiradas
     //  B[n] = prendas MB na conta de n − despesas pagas com esse MB
     //  own[n] = o que n pagou do próprio bolso
-    //  falta[n] = own[n] − B[n] − retiradas[n]  (> 0: ainda tem de tirar do dinheiro junto)
-    //  lucro = prendas − despesas;  lucro em MB = Σ max(B[n] − own[n], 0);  lucro em dinheiro = o resto
+    //  Cada um recupera own[n] (menos o que já tirou): primeiro das prendas MB na sua conta
+    //  (ou tudo do dinheiro em mão, conforme a opção). No fim: fica em mão = dinheiro junto −
+    //  o que se tira; vai para a conta conjunta = B[n] − o que cada um fica da sua conta.
+    //  Fica em mão + conta conjunta = lucro (prendas − despesas).
     window.wedRegistos = [];
     const WED_CATS = [
         { id: 'espaco',   icon: '🏰', label: 'Quinta / Espaço' },
@@ -2590,22 +2606,47 @@
         const rec = T.recDin + T.recBan;
         const desp = T.despProp + T.despPDin + T.despPBan;
         const lucro = rec - desp;
-        let lucroBan = 0, sumFaltaPos = 0;
         for (const n in P) {
             const x = P[n];
-            x.own = x.ownDin + x.ownBan;
-            x.B = x.mbIn - x.mbOut;                      // prendas MB que ficaram na conta
-            x.falta = x.own - x.B - x.ret + x.adj;       // > 0: ainda tem de tirar
-            lucroBan += Math.max(x.B - x.own, 0);
-            sumFaltaPos += Math.max(x.falta, 0);
-            x.final = x.falta + lucro / 2;               // divisão final a meias
+            x.own = x.ownDin + x.ownBan;                 // pagou do próprio bolso
+            x.B = x.mbIn - x.mbOut;                      // prendas MB que estão na conta
         }
         const cash = T.recDin - T.despPDin - T.cashOut;
-        return { P, T, rec, desp, lucro, lucroBan, lucroDin: lucro - lucroBan, cash, cashAfter: cash - sumFaltaPos, cats, custo: -lucro };
+        // Plano final: cada um recupera o que pagou do bolso (descontando o que já tirou);
+        // modo 'conta': primeiro das prendas MB que tem na sua conta, o resto do dinheiro em mão;
+        // modo 'mao': tudo do dinheiro em mão. O que sobra nas contas vai para a conta conjunta.
+        const modo = wedModo();
+        let fromCashTot = 0, conj = 0;
+        for (const n in P) {
+            const x = P[n];
+            x.pend = x.own - x.ret + x.adj;                              // ainda a recuperar (<0: tirou a mais)
+            const need = Math.max(x.pend, 0);
+            x.fromAcc = modo === 'conta' ? Math.min(need, Math.max(x.B, 0)) : 0;
+            x.fromCash = need - x.fromAcc;
+            x.toJoint = x.B - x.fromAcc;                                  // transfere para a conta conjunta
+            fromCashTot += x.fromCash;
+            conj += x.toJoint;
+        }
+        const endCash = cash - fromCashTot;
+        return { P, T, rec, desp, lucro, cash, endCash, conj, modo,
+                 lucroDin: endCash, lucroBan: conj, cashAfter: endCash,
+                 nowTot: cash + P.Joana.B + P.Toni.B, cats, custo: -lucro };
     }
     window.wedCompute = wedCompute;
 
     const setT = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+
+    function wedModo() {
+        let v = window._wedModoMem;
+        try { v = localStorage.getItem('wedModo') || v; } catch (e) {}
+        return v === 'mao' ? 'mao' : 'conta';
+    }
+    function setWedModo(v) {
+        try { localStorage.setItem('wedModo', v); } catch (e) {}
+        window._wedModoMem = v;
+        renderWed();
+    }
+    window.setWedModo = setWedModo;
 
     function renderWed() {
         const all = window.wedRegistos || [];
@@ -2619,42 +2660,50 @@
         setT('wedLucroDin', sgn(c.lucroDin));
         setT('wedLucroBan', sgn(c.lucroBan));
 
-        // ── Quanto cada um tira ──
+        // ── Agora ──
+        setT('wedNowCash', eur(c.cash));
+        setT('wedNowJ', eur(c.P.Joana.B));
+        setT('wedNowT', eur(c.P.Toni.B));
+        setT('wedNowTot', eur(c.nowTot));
+        document.getElementById('wedModo').value = c.modo;
+
+        // ── Quanto cada um recupera ──
         ['Joana', 'Toni'].forEach(n => {
             const x = c.P[n];
             const el = document.getElementById(n === 'Joana' ? 'wedTakeJ' : 'wedTakeT');
             el.className = 'wed-take ' + (n === 'Joana' ? 'j' : 't');
-            let res;
-            if (x.falta > 0.004) res = `<div class="wed-take-res"><span>➜ Tira do dinheiro junto</span><b class="neg">${eur(x.falta)}</b></div>
-                <button class="wed-take-btn" onclick="openWedRetirada('${n}', ${r2(x.falta)})">💸 Registar que ${n === 'Joana' ? 'a Joana' : 'o Toni'} tirou ${eur(x.falta)}</button>`;
-            else if (x.falta < -0.004) res = `<div class="wed-take-res"><span>${x.ret > 0.004 ? 'Já tirou a mais' : 'Tem na conta mais prendas do que pagou'}</span><b class="pos">${eur(-x.falta)}</b></div>
-                <div class="wed-hint" style="margin-top:4px;">${x.ret > 0.004 ? 'Tirou mais do que precisava.' : 'Não precisa de tirar nada. O que sobra conta como lucro em MB.'}</div>`;
-            else res = `<div class="wed-take-res"><span>✅ Já recuperou o que pagou</span><b>0.00€</b></div>`;
+            const quem = n === 'Joana' ? 'a Joana' : 'o Toni';
+            let res = '';
+            if (x.pend < -0.004) {
+                res = `<div class="wed-take-res"><span>Já tirou a mais</span><b class="pos">${eur(-x.pend)}</b></div>
+                       <div class="wed-hint" style="margin-top:4px;">Deve devolver ao dinheiro em mão.</div>`;
+            } else if (x.pend < 0.005) {
+                res = `<div class="wed-take-res"><span>✅ Já recuperou tudo</span><b>0.00€</b></div>`;
+            } else {
+                if (x.fromAcc > 0.004) res += `<div class="wed-take-res"><span>➜ Fica das prendas na sua conta</span><b>${eur(x.fromAcc)}</b></div>`;
+                if (x.fromCash > 0.004) res += `<div class="wed-take-res"><span>➜ Tira do dinheiro em mão</span><b class="neg">${eur(x.fromCash)}</b></div>
+                    <button class="wed-take-btn" onclick="openWedRetirada('${n}', ${r2(x.fromCash)})">💸 Registar que ${quem} tirou ${eur(x.fromCash)}</button>`;
+            }
             el.innerHTML = `<div class="wed-take-name">${n === 'Joana' ? '🔴' : '🔵'} ${n}</div>
                 <div class="wed-kv"><span>Pagou do próprio bolso (💵 ${eur(x.ownDin)} · 🏦 ${eur(x.ownBan)})</span><b>${eur(x.own)}</b></div>
-                <div class="wed-kv"><span>Prendas MB na conta${x.mbOut > 0.004 ? ` (${eur(x.mbIn)} − ${eur(x.mbOut)} já gastos)` : ''}</span><b>${x.B >= 0 ? '−' : '+'}${eur(Math.abs(x.B))}</b></div>
-                ${x.ret > 0.004 ? `<div class="wed-kv"><span>Já tirou do dinheiro junto</span><b>−${eur(x.ret)}</b></div>` : ''}
+                ${x.ret > 0.004 ? `<div class="wed-kv"><span>Já tirou do dinheiro em mão</span><b>−${eur(x.ret)}</b></div>` : ''}
                 ${Math.abs(x.adj) > 0.004 ? `<div class="wed-kv"><span>Acertos antigos</span><b>${sgn(x.adj)}</b></div>` : ''}
+                <div class="wed-kv"><span>Ainda a recuperar</span><b>${eur(Math.max(x.pend, 0))}</b></div>
                 ${res}`;
         });
-        setT('wedCashNow', eur(c.cash));
-        setT('wedCashAfter', sgn(c.cashAfter));
-        document.getElementById('wedCashAfter').className = cls(c.cashAfter);
 
-        // ── Divisão final ──
-        setT('wedFinalHint', c.lucro >= 0
-            ? `Cada um recupera o que pagou e fica com metade do lucro (${eur(c.lucro / 2)}).`
-            : `Cada um recupera o que pagou e suporta metade do prejuízo (${eur(-c.lucro / 2)}).`);
-        document.getElementById('wedFinal').innerHTML = ['Joana', 'Toni'].map(n => {
-            const x = c.P[n];
-            const tot = x.own + c.lucro / 2;
-            const sub = `Fica no total com ${eur(tot)} (pagou ${eur(x.own)} ${c.lucro >= 0 ? '+' : '−'} ${eur(Math.abs(c.lucro / 2))})` +
-                (Math.abs(x.B) > 0.004 ? ` · já tem ${eur(x.B)} de prendas na conta` : '') +
-                (x.ret > 0.004 ? ` · já tirou ${eur(x.ret)}` : '');
-            const val = x.final > 0.004 ? `<b class="neg">${eur(x.final)}</b>` : x.final < -0.004 ? `<b class="pos">${eur(-x.final)}</b>` : '<b>0.00€</b>';
-            const what = x.final > 0.004 ? 'tira do dinheiro junto' : x.final < -0.004 ? `tem a mais → passa ${n === 'Joana' ? 'ao Toni' : 'à Joana'} ou põe no dinheiro junto` : 'não tira nem dá nada';
-            return `<div class="wed-final"><div><div class="wed-final-name">${n === 'Joana' ? '🔴' : '🔵'} ${n} ${what}</div><div class="wed-final-sub">${sub}</div></div>${val}</div>`;
-        }).join('');
+        // ── No fim ──
+        setT('wedEndCash', (c.endCash < -0.004 ? '−' : '') + eur(Math.abs(c.endCash)));
+        document.getElementById('wedEndCash').className = c.endCash < -0.004 ? 'neg' : '';
+        setT('wedEndJ', eur(c.P.Joana.toJoint));
+        setT('wedEndT', eur(c.P.Toni.toJoint));
+        setT('wedEndConj', eur(c.conj));
+        setT('wedEndLabel', c.lucro >= -0.004 ? 'Lucro total (em mão + conjunta)' : 'Prejuízo total');
+        setT('wedEndTot', eur(Math.abs(c.lucro)));
+        const hints = [];
+        if (c.endCash < -0.004) hints.push(`⚠️ O dinheiro em mão não chega: faltam ${eur(-c.endCash)}. Escolhe recuperar primeiro das contas, ou tira esse valor de uma conta.`);
+        ['Joana', 'Toni'].forEach(n => { if (c.P[n].toJoint < -0.004) hints.push(`⚠️ ${n} pagou com MB das prendas mais do que recebeu na conta (${eur(-c.P[n].toJoint)} a menos).`); });
+        setT('wedEndHint', hints.join(' '));
 
         // ── Prendas ──
         setT('wedTotRec', eur(c.rec));
@@ -2783,7 +2832,7 @@
             hint = `${w.fonte} pagou do próprio bolso: vai recuperar este valor das prendas.`;
         } else if (k === 'retirada') {
             const c = wedCompute((window.wedRegistos || []).filter(r => r.id !== w.editing));
-            hint = `💵 Dinheiro junto: <b>${eur(c.cash)}</b> · ${w.fonte} ainda tem a tirar <b>${eur(Math.max(c.P[w.fonte].falta, 0))}</b>`;
+            hint = `💵 Dinheiro em mão: <b>${eur(c.cash)}</b> · ${w.fonte} ainda tem a tirar <b>${eur(c.P[w.fonte].fromCash)}</b>`;
         } else if (k === 'receita' && w.metodo === 'dinheiro') {
             hint = '💵 Vai para o dinheiro junto.';
         }
@@ -2926,8 +2975,8 @@
         const blank = R('', '');
         const resumo = [
             R(c.lucro >= 0 ? 'LUCRO DO CASAMENTO' : 'PREJUÍZO DO CASAMENTO', Math.abs(c.lucro)),
-            R('  Lucro em dinheiro', c.lucroDin),
-            R('  Lucro em MB', c.lucroBan),
+            R('  Fica em mão (dinheiro)', c.endCash),
+            R('  Vai para a conta conjunta', c.conj),
             blank,
             R('PRENDAS', c.rec),
             R('  Dinheiro (junto)', c.T.recDin),
@@ -2944,18 +2993,25 @@
             R('  Prendas: MB conta Joana', c.P.Joana.mbOut),
             R('  Prendas: MB conta Toni', c.P.Toni.mbOut),
             blank,
-            R('QUANTO CADA UM TIRA (recuperar o que pagou)', ''),
+            R('ONDE ESTÁ O DINHEIRO AGORA', c.nowTot),
+            R('  Em mão (dinheiro junto)', c.cash),
+            R('  Prendas na conta da Joana', c.P.Joana.B),
+            R('  Prendas na conta do Toni', c.P.Toni.B),
+            blank,
+            R(c.modo === 'conta' ? 'QUANTO CADA UM RECUPERA (primeiro da própria conta)' : 'QUANTO CADA UM RECUPERA (tudo do dinheiro em mão)', ''),
             ...['Joana', 'Toni'].flatMap(n => [
                 R(`  ${n}: pagou do próprio bolso`, c.P[n].own),
-                R(`  ${n}: prendas MB que ficaram na conta`, c.P[n].B),
-                R(`  ${n}: já tirou do dinheiro junto`, c.P[n].ret),
-                R(c.P[n].falta >= 0 ? `  ${n}: ainda tira do dinheiro junto` : `  ${n}: tem a mais`, Math.abs(c.P[n].falta))
+                R(`  ${n}: já tirou do dinheiro em mão`, c.P[n].ret),
+                R(`  ${n}: fica das prendas na sua conta`, c.P[n].fromAcc),
+                R(`  ${n}: tira do dinheiro em mão`, c.P[n].fromCash)
             ]),
-            R('Dinheiro junto agora', c.cash),
-            R('Dinheiro junto depois de tirarem', c.cashAfter),
             blank,
-            R('DIVISÃO FINAL (lucro a meias)', ''),
-            ...['Joana', 'Toni'].map(n => R(c.P[n].final >= 0 ? `  ${n} tira do dinheiro junto` : `  ${n} tem a mais (passa ao outro)`, Math.abs(c.P[n].final)))
+            R('NO FIM', ''),
+            R('  Fica em mão (dinheiro)', c.endCash),
+            R('  Joana transfere para a conta conjunta', c.P.Joana.toJoint),
+            R('  Toni transfere para a conta conjunta', c.P.Toni.toJoint),
+            R('  Total na conta conjunta', c.conj),
+            R(c.lucro >= 0 ? '  Lucro total' : '  Prejuízo total', Math.abs(c.lucro))
         ];
         const prendas = rows.filter(r => r.Tipo === 'Prenda').map(r => ({
             'Convidado': r['Convidado / Descrição'], 'Valor (€)': r['Valor (€)'],
