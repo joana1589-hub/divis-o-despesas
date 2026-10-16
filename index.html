@@ -178,6 +178,25 @@
         .org-name-top small { color: var(--gray); font-weight: 500; }
         .org-name-sel { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .org-name-sel select { padding: 8px 8px; font-size: 0.78rem; }
+        .fix-cat { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); margin: 14px 0 4px; }
+        .fix-row { padding: 10px 0; border-bottom: 1px solid var(--light-gray); }
+        .fix-row.off { opacity: 0.45; }
+        .fix-top { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; }
+        .fix-top input[type=checkbox] { width: 20px; height: 20px; flex-shrink: 0; }
+        .fix-top span { flex: 1; min-width: 0; }
+        .fix-top small { color: var(--gray); font-weight: 500; white-space: nowrap; }
+        .fix-sel { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .fix-sel select { padding: 8px; font-size: 0.78rem; }
+        .arr-row { padding: 11px 0; border-bottom: 1px solid var(--light-gray); }
+        .arr-row.off { opacity: 0.45; }
+        .arr-top { display: flex; align-items: center; gap: 10px; }
+        .arr-top input[type=checkbox] { width: 20px; height: 20px; flex-shrink: 0; }
+        .arr-name { flex: 1; font-weight: 800; font-size: 0.9rem; }
+        .arr-name small { color: var(--gray); font-weight: 500; margin-left: 4px; }
+        .arr-what { font-size: 0.74rem; color: var(--gray); margin: 4px 0 6px 30px; line-height: 1.45; }
+        .arr-what b { color: var(--dark); font-weight: 700; }
+        .arr-row select { margin-left: 30px; width: calc(100% - 30px); padding: 8px; font-size: 0.8rem; }
+        .arr-sum { background: var(--bg); border-radius: 12px; padding: 10px 12px; font-size: 0.8rem; margin-bottom: 8px; }
         .desc-list { margin-top: 10px; }
         .desc-list-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; font-weight: 800; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; }
         .desc-list-head button { border: none; background: none; color: var(--accent); font-weight: 700; font-size: 0.75rem; cursor: pointer; font-family: 'DM Sans', sans-serif; text-transform: none; letter-spacing: 0; padding: 2px 4px; }
@@ -568,6 +587,8 @@
             <select id="subCatSel" onchange="renderSubDetail()" style="margin-bottom:12px;padding:11px 12px;font-size:0.88rem;"></select>
             <div id="subDetail"></div>
             <button class="btn" style="background:var(--bg);color:var(--dark);margin-top:12px;" onclick="openOrg()">🗂️ Organizar categorias e nomes</button>
+            <button class="btn" style="background:var(--wed-bg);color:var(--wed);margin-top:8px;" onclick="openArrumar()">✨ Arrumar despesas antigas</button>
+            <button class="btn" id="fixBtn" style="background:#fffbea;color:#7a5b00;border:1.5px solid #f6e3a1;margin-top:8px;display:none;" onclick="openFix()">🧹 Arrumar despesas antigas</button>
         </div>
         <div class="card"><div class="card-title">Comparação de Gastos</div><div class="chart-container"><canvas id="chartComparacao"></canvas></div></div>
 
@@ -1079,6 +1100,29 @@
     </div>
 </div>
 
+<!-- MODAL ARRUMAR DESPESAS ANTIGAS -->
+<div class="modal-overlay" id="fixModal">
+    <div class="modal">
+        <div class="modal-title">🧹 Arrumar despesas antigas</div>
+        <p class="modal-sub">Estas despesas têm como descrição só o nome da categoria e o nome verdadeiro está na nota. Para cada uma, escolhe a subcategoria (e, se quiseres, outra categoria). Ao aplicar, a nota passa a ser a descrição. <b>Valores, quem pagou, datas e contas não mudam.</b></p>
+        <div id="fixList"></div>
+        <div class="wed-ent-box" style="margin:14px 0 4px;"><div class="wed-kv"><span id="fixSummary">—</span></div></div>
+        <button class="btn btn-save" id="fixApply" onclick="applyFix()">✅ Aplicar</button>
+        <button class="btn btn-cancel" onclick="closeFix()">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL ARRUMAR -->
+<div class="modal-overlay" id="arrModal">
+    <div class="modal">
+        <div class="modal-title">✨ Arrumar despesas antigas</div>
+        <p class="modal-sub">Não muda valores, datas nem quem pagou. Só a <b>descrição</b> (quando era só o nome da categoria, passa a ser a nota), a <b>categoria</b> (Meo, luz, água, seguros… passam para 🏠 Casa) e a <b>subcategoria</b>. Confirma ou muda antes de aplicar; desmarca o que não quiseres.</p>
+        <div id="arrList"></div>
+        <button class="btn btn-save" id="arrApply" onclick="applyArrumar()">Aplicar</button>
+        <button class="btn btn-cancel" onclick="closeArrumar()">Cancelar</button>
+    </div>
+</div>
+
 <!-- MODAL ORGANIZAR CATEGORIAS -->
 <div class="modal-overlay" id="orgModal">
     <div class="modal">
@@ -1493,7 +1537,7 @@
     // A subcategoria de uma despesa vem do nome (descSub) ou, se não houver, do campo sub.
     // Assim, dizer "MEO → Serviços" reorganiza logo todas as despesas MEO, antigas incluídas.
     const DEFAULT_SUBS = {
-        casa:        ['Renda / Prestação', 'Serviços (luz, água, net)', 'Limpeza', 'Manutenção', 'Mobília / Decoração'],
+        casa:        ['Empréstimo', 'Energia e água', 'Comunicações', 'Limpeza', 'Seguros', 'Manutenção', 'Mobília / Decoração'],
         supermercado:['Compras do mês', 'Compras pequenas'],
         restaurante: ['Jantar fora', 'Take-away', 'Café / Lanche'],
         transporte:  ['Combustível', 'Portagens', 'Manutenção do carro', 'Estacionamento'],
@@ -1648,6 +1692,294 @@
     });
     document.getElementById('orgModal').addEventListener('click', e => { if (e.target.id === 'orgModal') closeOrg(); });
 
+    // ── Arrumar despesas antigas (nome verdadeiro na nota) ──
+    const keyN = t => String(t || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt');
+    const catLabels = new Set(CATS.map(c => keyN(c.label)));
+    // Sugestões para os casos mais comuns (só como ponto de partida).
+    const FIX_HINTS = [
+        [/\b(luz|edp|agua|água|gas|gás|meo|nos|vodafone|net|internet|eletricidade)\b/i, 'servicos-luz-agua-net'],
+        [/\b(susana|limpeza|empregada)\b/i, 'limpeza'],
+        [/\b(renda)\b/i, 'renda-prestacao']
+    ];
+    function fixCandidates() {
+        const groups = new Map();
+        (window.registros || []).forEach(r => {
+            if (r.type !== 'EXP' || !r.nota || !String(r.nota).trim()) return;
+            const d = keyN(r.desc);
+            if (d && !catLabels.has(d)) return;            // já tem um nome próprio
+            const cat = r.cat || 'outro';
+            const k = cat + '|' + keyN(r.nota);
+            const g = groups.get(k) || { cat, key: keyN(r.nota), forms: {}, ids: [], tot: 0 };
+            const f = String(r.nota).trim().replace(/\s+/g, ' ');
+            g.forms[f] = (g.forms[f] || 0) + 1; g.ids.push(r.id); g.tot += Number(r.val) || 0;
+            groups.set(k, g);
+        });
+        return [...groups.values()].map(g => {
+            g.name = Object.entries(g.forms).sort((a, b) => b[1] - a[1] || (/^\p{Lu}/u.test(b[0]) - /^\p{Lu}/u.test(a[0])))[0][0];
+            g.name = g.name.charAt(0).toLocaleUpperCase('pt') + g.name.slice(1);
+            return g;
+        }).sort((a, b) => CATS.findIndex(c => c.id === a.cat) - CATS.findIndex(c => c.id === b.cat) || b.tot - a.tot);
+    }
+    window.fixCandidates = fixCandidates;
+    function updateFixBtn() {
+        const b = document.getElementById('fixBtn');
+        if (!b) return;
+        const n = fixCandidates().reduce((s, g) => s + g.ids.length, 0);
+        b.style.display = n ? 'block' : 'none';
+        b.innerText = `🧹 Arrumar despesas antigas (${n})`;
+    }
+    window.updateFixBtn = updateFixBtn;
+
+    window._fix = null;
+    function openFix() {
+        const groups = fixCandidates();
+        window._fix = groups.map(g => {
+            const existing = subOf({ cat: g.cat, desc: g.name });
+            const hint = FIX_HINTS.find(([re, id]) => re.test(normText(g.name)) && subsFor(g.cat).some(x => x.id === id));
+            return { ...g, on: true, toCat: g.cat, sub: existing || (hint ? hint[1] : ''), newSubs: [] };
+        });
+        renderFix();
+        document.getElementById('fixModal').classList.add('open');
+    }
+    function closeFix() { document.getElementById('fixModal').classList.remove('open'); }
+    window.openFix = openFix; window.closeFix = closeFix;
+    function fixSubsFor(cat) {
+        // subcategorias existentes + as novas escolhidas neste ecrã (ainda por gravar)
+        const extra = [];
+        (window._fix || []).forEach(g => g.newSubs.forEach(ns => { if (ns.cat === cat && !extra.some(e => e.id === ns.id)) extra.push(ns); }));
+        return subsFor(cat).concat(extra.filter(e => !subsFor(cat).some(x => x.id === e.id)));
+    }
+    function renderFix() {
+        const box = document.getElementById('fixList');
+        const F = window._fix || [];
+        if (!F.length) { box.innerHTML = '<div class="desc-empty">Não há despesas para arrumar. 🎉</div>'; }
+        let html = '', lastCat = '';
+        F.forEach((g, i) => {
+            if (g.cat !== lastCat) { lastCat = g.cat; const C = CATS.find(c => c.id === g.cat) || { icon: '📦', label: g.cat }; html += `<div class="fix-cat">${C.icon} ${C.label}</div>`; }
+            const subs = fixSubsFor(g.toCat);
+            const subOpts = `<option value="">— sem subcategoria —</option>` +
+                subs.map(x => `<option value="${escHtml(x.id)}"${x.id === g.sub ? ' selected' : ''}>${escHtml(x.label)}</option>`).join('') +
+                `<option value="__new_name">＋ Nova: «${escHtml(g.name)}»</option><option value="__new">＋ Nova com outro nome…</option>`;
+            const catOpts = CATS.map(c => `<option value="${c.id}"${c.id === g.toCat ? ' selected' : ''}>${c.icon} ${c.label}${c.id === g.cat ? '' : ' (mudar)'}</option>`).join('');
+            html += `<div class="fix-row${g.on ? '' : ' off'}" data-i="${i}">
+                <div class="fix-top"><input type="checkbox" data-act="on"${g.on ? ' checked' : ''}><span>${escHtml(g.name)}</span><small>${g.ids.length}× · ${g.tot.toFixed(2)}€</small></div>
+                <div class="fix-sel"><select data-act="sub">${subOpts}</select><select data-act="cat">${catOpts}</select></div>
+            </div>`;
+        });
+        if (F.length) box.innerHTML = html;
+        const on = F.filter(g => g.on);
+        const n = on.reduce((s, g) => s + g.ids.length, 0);
+        const moved = on.filter(g => g.toCat !== g.cat).reduce((s, g) => s + g.ids.length, 0);
+        document.getElementById('fixSummary').innerText = n
+            ? `${n} despesa(s) vão passar a ter o nome da nota como descrição${moved ? `, ${moved} mudam de categoria` : ''}. Nenhum valor muda.`
+            : 'Nada selecionado.';
+        document.getElementById('fixApply').disabled = !n;
+    }
+    window.renderFix = renderFix;
+    document.getElementById('fixList').addEventListener('change', e => {
+        const el = e.target, row = el.closest('.fix-row'); if (!row) return;
+        const g = window._fix[Number(row.dataset.i)];
+        if (el.dataset.act === 'on') g.on = el.checked;
+        else if (el.dataset.act === 'cat') { g.toCat = el.value; if (!fixSubsFor(g.toCat).some(x => x.id === g.sub)) g.sub = ''; }
+        else if (el.dataset.act === 'sub') {
+            let v = el.value;
+            if (v === '__new_name' || v === '__new') {
+                const label = String(v === '__new' ? (prompt('Nome da nova subcategoria:', g.name) || '') : g.name).trim();
+                if (!label) { renderFix(); return; }
+                const ex = fixSubsFor(g.toCat).find(x => normText(x.label) === normText(label));
+                if (ex) v = ex.id;
+                else {
+                    let id = slug(label); const all = fixSubsFor(g.toCat);
+                    while (all.some(x => x.id === id)) id += '-2';
+                    g.newSubs.push({ cat: g.toCat, id, label }); v = id;
+                }
+            }
+            g.sub = v;
+        }
+        renderFix();
+    });
+    async function applyFix() {
+        const on = (window._fix || []).filter(g => g.on);
+        const n = on.reduce((s, g) => s + g.ids.length, 0);
+        if (!n || !confirm(`Aplicar a ${n} despesa(s)?\n\nA nota passa a ser a descrição e fica com a subcategoria escolhida. Valores, quem pagou e datas não mudam.`)) return;
+        const btn = document.getElementById('fixApply');
+        btn.disabled = true;
+        try {
+            // 1) subcategorias novas
+            const newByCat = {};
+            on.forEach(g => g.newSubs.filter(ns => ns.id === g.sub || on.some(o => o.sub === ns.id && o.toCat === ns.cat))
+                .forEach(ns => { (newByCat[ns.cat] = newByCat[ns.cat] || []).some(x => x.id === ns.id) || newByCat[ns.cat].push({ id: ns.id, label: ns.label }); }));
+            const subcats = JSON.parse(JSON.stringify((window.config || {}).subcats || {}));
+            Object.entries(newByCat).forEach(([cat, list]) => {
+                const cur = Array.isArray(subcats[cat]) ? subcats[cat] : subsFor(cat).map(x => ({ ...x }));
+                list.forEach(ns => { if (!cur.some(x => x.id === ns.id)) cur.push(ns); });
+                subcats[cat] = cur;
+            });
+            // 2) ligações nome → subcategoria
+            const descSub = JSON.parse(JSON.stringify((window.config || {}).descSub || {}));
+            on.forEach(g => { if (g.sub) { descSub[g.toCat] = descSub[g.toCat] || {}; descSub[g.toCat][keyN(g.name)] = g.sub; } });
+            await saveCfg({ subcats, descSub });
+            // 3) despesas
+            const { db, doc, updateDoc } = window._fb;
+            let done = 0;
+            for (const g of on) {
+                for (const id of g.ids) {
+                    await updateDoc(doc(db, 'registos', id), { desc: g.name, cat: g.toCat, sub: g.sub || null });
+                    done++;
+                    if (done % 10 === 0) btn.innerText = `A gravar… ${done}/${n}`;
+                }
+            }
+            showToast(`✅ ${n} despesa(s) arrumadas`);
+            closeFix();
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao arrumar: ' + e.message + '\n\nO que já foi gravado fica; podes voltar a abrir para continuar.');
+        } finally {
+            btn.disabled = false; btn.innerText = '✅ Aplicar';
+            setTimeout(() => { updateFixBtn(); renderSubDetail(); render(); }, 300);
+        }
+    }
+    window.applyFix = applyFix;
+    document.getElementById('fixModal').addEventListener('click', e => { if (e.target.id === 'fixModal') closeFix(); });
+
+    // ── Arrumar despesas antigas ──
+    // Regras de sugestão (pelo nome): [expressão, subcategoria da Casa]
+    const ARR_RULES = [
+        [/emprest|prestac|credito habit|hipotec/, 'emprestimo'],
+        [/^(luz|agua|gas)\b|electricidade|eletricidade|\bedp\b|endesa|iberdrola|goldenergy|galp|\bepal\b|aguas d|smas|botija/, 'energia-e-agua'],
+        [/\bmeo\b|vodafone|nowo|\bdigi\b|internet|fibra|telemovel|telefone|\btv\b/, 'comunicacoes'],
+        [/susana|limpeza|empregada/, 'limpeza'],
+        [/seguro/, 'seguros'],
+        [/condominio|canalizador|eletricista|reparac|obras?\b/, 'manutencao'],
+        [/ikea|leroy|mobilia|decorac|moveis/, 'mobilia-decoracao']
+    ];
+    const CASA_SUBS = DEFAULT_SUBS.casa.map(l => ({ id: slug(l), label: l }));
+    const cap = t => { t = String(t || '').trim().replace(/\s+/g, ' '); return t ? t[0].toLocaleUpperCase('pt') + t.slice(1) : t; };
+    function arrCasaSubs() {
+        // Junta as subcategorias novas da Casa às que já existirem (sem apagar nenhuma).
+        const cur = Array.isArray(((window.config || {}).subcats || {}).casa) ? window.config.subcats.casa : null;
+        if (!cur) return CASA_SUBS.slice();
+        const out = cur.slice();
+        CASA_SUBS.forEach(x => { if (!out.some(y => y.id === x.id || normText(y.label) === normText(x.label))) out.push(x); });
+        return out;
+    }
+    function arrProposals() {
+        const labels = new Set(CATS.map(c => normText(c.label)));
+        const groups = new Map();
+        (window.registros || []).forEach(r => {
+            if (r.type !== 'EXP') return;
+            const descIsCat = !String(r.desc || '').trim() || labels.has(normText(r.desc));
+            const nota = String(r.nota || '').trim();
+            const name = descIsCat && nota ? cap(nota) : String(r.desc || '').trim();
+            if (!name) return;
+            const k = normText(name);
+            const rule = ARR_RULES.find(([re]) => re.test(k));
+            const movable = ['casa', 'servicos', 'outro'].includes(r.cat || 'outro');
+            const newCat = rule && movable ? 'casa' : (r.cat || 'outro');
+            const curSub = subOf(r);
+            const sugSub = curSub || (rule && newCat === 'casa' ? rule[1] : '');
+            const changeDesc = descIsCat && nota && name !== r.desc;
+            if (!changeDesc && newCat === (r.cat || 'outro') && (sugSub || '') === (curSub || '')) return;
+            const gk = k + '|' + newCat;     // mesmo nome e mesma categoria final → uma linha
+            const g = groups.get(gk) || { key: gk, forms: {}, cats: {}, newCat, sub: sugSub, recs: [], tot: 0, descChange: 0, oldDescs: new Set() };
+            g.forms[name] = (g.forms[name] || 0) + 1;
+            g.cats[r.cat || 'outro'] = (g.cats[r.cat || 'outro'] || 0) + 1;
+            if (!g.sub && sugSub) g.sub = sugSub;
+            g.recs.push(r); g.tot += Number(r.val) || 0;
+            if (changeDesc) { g.descChange++; g.oldDescs.add(r.desc || '(vazio)'); }
+            groups.set(gk, g);
+        });
+        return [...groups.values()].map(g => {
+            g.name = Object.entries(g.forms).sort((a, b) => b[1] - a[1] || (/[^\x00-\x7f]/.test(b[0]) - /[^\x00-\x7f]/.test(a[0])))[0][0];
+            g.on = true;
+            return g;
+        }).sort((a, b) => (b.sub ? 1 : 0) - (a.sub ? 1 : 0) || b.tot - a.tot);
+    }
+    function openArrumar() {
+        window._arr = arrProposals();
+        renderArrumar();
+        document.getElementById('arrModal').classList.add('open');
+    }
+    function closeArrumar() { document.getElementById('arrModal').classList.remove('open'); }
+    window.openArrumar = openArrumar; window.closeArrumar = closeArrumar;
+    function arrSubsFor(cat) { return cat === 'casa' ? arrCasaSubs() : subsFor(cat); }
+    function renderArrumar() {
+        const list = window._arr || [];
+        const box = document.getElementById('arrList');
+        if (!list.length) {
+            box.innerHTML = '<div class="desc-empty" style="padding:14px 0;">✅ Não há nada para arrumar.</div>';
+            document.getElementById('arrApply').style.display = 'none';
+            return;
+        }
+        document.getElementById('arrApply').style.display = '';
+        const on = list.filter(g => g.on);
+        const nRec = on.reduce((s, g) => s + g.recs.length, 0);
+        const C = id => CATS.find(c => c.id === id) || { icon: '📦', label: id };
+        box.innerHTML = `<div class="arr-sum">${list.length} nome(s) · ${list.reduce((s, g) => s + g.recs.length, 0)} despesa(s). Selecionadas: <b>${nRec}</b>.</div>` +
+            list.map((g, i) => {
+                const what = [];
+                if (g.descChange) what.push(`Descrição: <b>${[...g.oldDescs].map(escHtml).join(', ')}</b> → <b>${escHtml(g.name)}</b>`);
+                const moved = Object.entries(g.cats).filter(([c]) => c !== g.newCat);
+                what.push(moved.length
+                    ? `Categoria: ${moved.map(([c, n]) => `${n}× ${C(c).icon} ${C(c).label}`).join(', ')} → <b>${C(g.newCat).icon} ${C(g.newCat).label}</b>`
+                    : `Categoria: ${C(g.newCat).icon} ${C(g.newCat).label}`);
+                const subs = arrSubsFor(g.newCat);
+                const opts = `<option value="">— sem subcategoria (fica para depois) —</option>` + subs.map(x => `<option value="${escHtml(x.id)}"${x.id === g.sub ? ' selected' : ''}>${escHtml(x.label)}</option>`).join('');
+                return `<div class="arr-row${g.on ? '' : ' off'}" data-i="${i}">
+                    <div class="arr-top"><input type="checkbox" data-act="on"${g.on ? ' checked' : ''}><div class="arr-name">${escHtml(g.name)}<small>${g.recs.length}× · ${g.tot.toFixed(2)}€</small></div></div>
+                    <div class="arr-what">${what.join('<br>')}</div>
+                    <select data-act="sub">${opts}</select>
+                </div>`;
+            }).join('');
+        document.getElementById('arrApply').innerText = `✨ Aplicar a ${nRec} despesa(s)`;
+    }
+    document.getElementById('arrList').addEventListener('change', e => {
+        const row = e.target.closest('.arr-row'); if (!row) return;
+        const g = window._arr[Number(row.dataset.i)];
+        if (e.target.dataset.act === 'on') g.on = e.target.checked;
+        if (e.target.dataset.act === 'sub') g.sub = e.target.value;
+        renderArrumar();
+    });
+    async function applyArrumar() {
+        const list = (window._arr || []).filter(g => g.on);
+        const n = list.reduce((s, g) => s + g.recs.length, 0);
+        if (!n) return;
+        if (!confirm(`Arrumar ${n} despesa(s)?\n\nOs valores, datas e quem pagou não mudam.`)) return;
+        const btn = document.getElementById('arrApply');
+        btn.disabled = true;
+        try {
+            // 1) subcategorias da Casa e ligação nome → subcategoria (para as próximas)
+            const subcats = JSON.parse(JSON.stringify((window.config || {}).subcats || {}));
+            subcats.casa = arrCasaSubs();
+            const descSub = JSON.parse(JSON.stringify((window.config || {}).descSub || {}));
+            list.forEach(g => {
+                if (!g.sub) return;
+                descSub[g.newCat] = descSub[g.newCat] || {};
+                descSub[g.newCat][g.name.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt')] = g.sub;
+            });
+            await saveCfg({ subcats, descSub });
+            // 2) despesas
+            const { db, doc, updateDoc } = window._fb;
+            let done = 0;
+            for (const g of list) {
+                for (const r of g.recs) {
+                    const upd = { desc: g.name, cat: g.newCat, sub: g.sub || null };
+                    await updateDoc(doc(db, 'registos', r.id), withAuthor(upd, false));
+                    done++;
+                    if (done % 10 === 0) btn.innerText = `A arrumar… ${done}/${n}`;
+                }
+            }
+            showToast(`✨ ${done} despesa(s) arrumadas`);
+            closeArrumar();
+            setTimeout(() => { renderSubDetail(); render(); }, 300);
+        } catch (e) {
+            console.error(e);
+            alert('Erro a arrumar: ' + e.message);
+        } finally { btn.disabled = false; }
+    }
+    window.applyArrumar = applyArrumar;
+    document.getElementById('arrModal').addEventListener('click', e => { if (e.target.id === 'arrModal') closeArrumar(); });
+
     // ── Detalhe na Análise ──
     function analiseExp() {
         const selMes = document.querySelector('.selMes')?.value || 'all';
@@ -1661,6 +1993,7 @@
     function renderSubDetail() {
         const sel = document.getElementById('subCatSel'), box = document.getElementById('subDetail');
         if (!sel || !box) return;
+        updateFixBtn();
         const exp = analiseExp();
         const byCat = {};
         exp.forEach(r => { const c = r.cat || 'outro'; byCat[c] = (byCat[c] || 0) + Number(r.val); });

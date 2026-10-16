@@ -21,7 +21,7 @@ const CATS = [
   ['servicos', '📱', 'Serviços'], ['outro', '📦', 'Outro']
 ].map(([id, icon, label]) => ({ id, icon, label }));
 const DEFAULT_SUBS = {
-  casa: ['Renda / Prestação', 'Serviços (luz, água, net)', 'Limpeza', 'Manutenção', 'Mobília / Decoração'],
+  casa: ['Empréstimo', 'Energia e água', 'Comunicações', 'Limpeza', 'Seguros', 'Manutenção', 'Mobília / Decoração'],
   supermercado: ['Compras do mês', 'Compras pequenas'],
   restaurante: ['Jantar fora', 'Take-away', 'Café / Lanche'],
   transporte: ['Combustível', 'Portagens', 'Manutenção do carro', 'Estacionamento'],
