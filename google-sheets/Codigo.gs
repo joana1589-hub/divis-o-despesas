@@ -15,13 +15,14 @@ const EUR = '#,##0.00 "€"';
 const DATA_FMT = 'dd/mm/yyyy';
 
 const CATS = [
-  ['supermercado', '🛒', 'Supermercado'], ['restaurante', '🍽️', 'Restaurante'], ['casa', '🏠', 'Casa'],
+  ['supermercado', '🛒', 'Supermercado'], ['restaurante', '🍽️', 'Restaurante'], ['casa', '🏠', 'Casa'], ['quinta', '🏡', 'Quinta Guarda'],
   ['transporte', '🚗', 'Transporte'], ['saude', '💊', 'Saúde'], ['lazer', '🎬', 'Lazer'], ['roupa', '👗', 'Roupa'],
   ['viagem', '✈️', 'Viagem'], ['animal', '🐾', 'Animal'], ['tecnologia', '💻', 'Tecnologia'],
   ['servicos', '📱', 'Serviços'], ['outro', '📦', 'Outro']
 ].map(([id, icon, label]) => ({ id, icon, label }));
 const DEFAULT_SUBS = {
   casa: ['Empréstimo', 'Energia e água', 'Comunicações', 'Limpeza', 'Seguros', 'Manutenção', 'Mobília / Decoração'],
+  quinta: ['Empréstimo', 'Seguros', 'Impostos', 'Manutenção'],
   supermercado: ['Compras do mês', 'Compras pequenas'],
   restaurante: ['Jantar fora', 'Take-away', 'Café / Lanche'],
   transporte: ['Combustível', 'Portagens', 'Manutenção do carro', 'Estacionamento'],

@@ -1116,7 +1116,7 @@
 <div class="modal-overlay" id="arrModal">
     <div class="modal">
         <div class="modal-title">✨ Arrumar despesas antigas</div>
-        <p class="modal-sub">Não muda valores, datas nem quem pagou. Só a <b>descrição</b> (quando era só o nome da categoria, passa a ser a nota), a <b>categoria</b> (Meo, luz, água, seguros… passam para 🏠 Casa) e a <b>subcategoria</b>. Confirma ou muda antes de aplicar; desmarca o que não quiseres.</p>
+        <p class="modal-sub">Não muda valores, datas nem quem pagou. Só a <b>descrição</b> (quando era só o nome da categoria, passa a ser a nota), a <b>categoria</b> (Meo, luz, água… passam para 🏠 Casa; empréstimo da quinta e seguros vida/multirriscos para 🏡 Quinta Guarda) e a <b>subcategoria</b>. Confirma ou muda antes de aplicar; desmarca o que não quiseres.</p>
         <div id="arrList"></div>
         <button class="btn btn-save" id="arrApply" onclick="applyArrumar()">Aplicar</button>
         <button class="btn btn-cancel" onclick="closeArrumar()">Cancelar</button>
@@ -1492,6 +1492,7 @@
         { id: 'supermercado', icon: '🛒', label: 'Supermercado' },
         { id: 'restaurante',  icon: '🍽️', label: 'Restaurante'  },
         { id: 'casa',         icon: '🏠', label: 'Casa'          },
+        { id: 'quinta',       icon: '🏡', label: 'Quinta Guarda' },
         { id: 'transporte',   icon: '🚗', label: 'Transporte'    },
         { id: 'saude',        icon: '💊', label: 'Saúde'         },
         { id: 'lazer',        icon: '🎬', label: 'Lazer'         },
@@ -1538,6 +1539,7 @@
     // Assim, dizer "MEO → Serviços" reorganiza logo todas as despesas MEO, antigas incluídas.
     const DEFAULT_SUBS = {
         casa:        ['Empréstimo', 'Energia e água', 'Comunicações', 'Limpeza', 'Seguros', 'Manutenção', 'Mobília / Decoração'],
+        quinta:      ['Empréstimo', 'Seguros', 'Impostos', 'Manutenção'],
         supermercado:['Compras do mês', 'Compras pequenas'],
         restaurante: ['Jantar fora', 'Take-away', 'Café / Lanche'],
         transporte:  ['Combustível', 'Portagens', 'Manutenção do carro', 'Estacionamento'],
@@ -1844,25 +1846,32 @@
 
     // ── Arrumar despesas antigas ──
     // Regras de sugestão (pelo nome): [expressão, subcategoria da Casa]
+    // [expressão, categoria, subcategoria] — a primeira que bater ganha.
     const ARR_RULES = [
-        [/emprest|prestac|credito habit|hipotec/, 'emprestimo'],
-        [/^(luz|agua|gas)\b|electricidade|eletricidade|\bedp\b|endesa|iberdrola|goldenergy|galp|\bepal\b|aguas d|smas|botija/, 'energia-e-agua'],
-        [/\bmeo\b|vodafone|nowo|\bdigi\b|internet|fibra|telemovel|telefone|\btv\b/, 'comunicacoes'],
-        [/susana|limpeza|empregada/, 'limpeza'],
-        [/seguro/, 'seguros'],
-        [/condominio|canalizador|eletricista|reparac|obras?\b/, 'manutencao'],
-        [/ikea|leroy|mobilia|decorac|moveis/, 'mobilia-decoracao']
+        [/quinta.*(emprest|prestac|credito)|(emprest|prestac|credito).*quinta/, 'quinta', 'emprestimo'],
+        [/seguro (de )?vida|multirrisco|seguro.*quinta/, 'quinta', 'seguros'],
+        [/\bimi\b|imposto.*quinta/, 'quinta', 'impostos'],
+        [/emprest|prestac|credito habit|hipotec/, 'casa', 'emprestimo'],
+        [/^(luz|agua|gas)\b|electricidade|eletricidade|\bedp\b|endesa|iberdrola|goldenergy|galp|\bepal\b|aguas d|smas|botija/, 'casa', 'energia-e-agua'],
+        [/\bmeo\b|vodafone|nowo|\bdigi\b|internet|fibra|telemovel|telefone|\btv\b/, 'casa', 'comunicacoes'],
+        [/susana|limpeza|empregada/, 'casa', 'limpeza'],
+        [/seguro/, 'casa', 'seguros'],
+        [/condominio|canalizador|eletricista|reparac|obras?\b/, 'casa', 'manutencao'],
+        [/ikea|leroy|mobilia|decorac|moveis/, 'casa', 'mobilia-decoracao']
     ];
     const CASA_SUBS = DEFAULT_SUBS.casa.map(l => ({ id: slug(l), label: l }));
+    const QUINTA_SUBS = DEFAULT_SUBS.quinta.map(l => ({ id: slug(l), label: l }));
     const cap = t => { t = String(t || '').trim().replace(/\s+/g, ' '); return t ? t[0].toLocaleUpperCase('pt') + t.slice(1) : t; };
-    function arrCasaSubs() {
-        // Junta as subcategorias novas da Casa às que já existirem (sem apagar nenhuma).
-        const cur = Array.isArray(((window.config || {}).subcats || {}).casa) ? window.config.subcats.casa : null;
-        if (!cur) return CASA_SUBS.slice();
+    function arrSubsMerged(cat) {
+        // Junta as subcategorias predefinidas às que já existirem (sem apagar nenhuma).
+        const base = cat === 'quinta' ? QUINTA_SUBS : CASA_SUBS;
+        const cur = Array.isArray(((window.config || {}).subcats || {})[cat]) ? window.config.subcats[cat] : null;
+        if (!cur) return base.slice();
         const out = cur.slice();
-        CASA_SUBS.forEach(x => { if (!out.some(y => y.id === x.id || normText(y.label) === normText(x.label))) out.push(x); });
+        base.forEach(x => { if (!out.some(y => y.id === x.id || normText(y.label) === normText(x.label))) out.push(x); });
         return out;
     }
+    const arrCasaSubs = () => arrSubsMerged('casa');
     function arrProposals() {
         const labels = new Set(CATS.map(c => normText(c.label)));
         const groups = new Map();
@@ -1874,10 +1883,11 @@
             if (!name) return;
             const k = normText(name);
             const rule = ARR_RULES.find(([re]) => re.test(k));
-            const movable = ['casa', 'servicos', 'outro'].includes(r.cat || 'outro');
-            const newCat = rule && movable ? 'casa' : (r.cat || 'outro');
-            const curSub = subOf(r);
-            const sugSub = curSub || (rule && newCat === 'casa' ? rule[1] : '');
+            const movable = ['casa', 'quinta', 'servicos', 'outro'].includes(r.cat || 'outro');
+            const newCat = rule && movable ? rule[1] : (r.cat || 'outro');
+            // Se muda de categoria, a subcategoria vem da regra; se não, mantém a que já tinha.
+            const curSub = newCat === (r.cat || 'outro') ? subOf(r) : null;
+            const sugSub = curSub || (rule && newCat === rule[1] ? rule[2] : '');
             const changeDesc = descIsCat && nota && name !== r.desc;
             if (!changeDesc && newCat === (r.cat || 'outro') && (sugSub || '') === (curSub || '')) return;
             const gk = k + '|' + newCat;     // mesmo nome e mesma categoria final → uma linha
@@ -1902,7 +1912,7 @@
     }
     function closeArrumar() { document.getElementById('arrModal').classList.remove('open'); }
     window.openArrumar = openArrumar; window.closeArrumar = closeArrumar;
-    function arrSubsFor(cat) { return cat === 'casa' ? arrCasaSubs() : subsFor(cat); }
+    function arrSubsFor(cat) { return (cat === 'casa' || cat === 'quinta') ? arrSubsMerged(cat) : subsFor(cat); }
     function renderArrumar() {
         const list = window._arr || [];
         const box = document.getElementById('arrList');
@@ -1950,7 +1960,8 @@
         try {
             // 1) subcategorias da Casa e ligação nome → subcategoria (para as próximas)
             const subcats = JSON.parse(JSON.stringify((window.config || {}).subcats || {}));
-            subcats.casa = arrCasaSubs();
+            subcats.casa = arrSubsMerged('casa');
+            if (list.some(g => g.newCat === 'quinta')) subcats.quinta = arrSubsMerged('quinta');
             const descSub = JSON.parse(JSON.stringify((window.config || {}).descSub || {}));
             list.forEach(g => {
                 if (!g.sub) return;
