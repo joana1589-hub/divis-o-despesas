@@ -1,7 +1,7 @@
 // Service worker da app Finanças da Casa.
 // Estratégia: rede primeiro, cache como reserva (para abrir sem internet).
 // Os pedidos ao Firebase/Google nunca são intercetados.
-const CACHE = 'financas-v2';
+const CACHE = 'financas-v3';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

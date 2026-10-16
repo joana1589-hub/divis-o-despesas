@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
     <!-- SheetJS para exportar Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
@@ -595,7 +595,6 @@
             <div id="subDetail"></div>
             <button class="btn" style="background:var(--bg);color:var(--dark);margin-top:12px;" onclick="openOrg()">🗂️ Organizar categorias e nomes</button>
             <button class="btn" style="background:var(--wed-bg);color:var(--wed);margin-top:8px;" onclick="openArrumar()">✨ Arrumar despesas antigas</button>
-            <button class="btn" id="fixBtn" style="background:#fffbea;color:#7a5b00;border:1.5px solid #f6e3a1;margin-top:8px;display:none;" onclick="openFix()">🧹 Arrumar despesas antigas</button>
         </div>
         <div class="card"><div class="card-title">Comparação de Gastos</div><div class="chart-container"><canvas id="chartComparacao"></canvas></div></div>
 
@@ -1298,6 +1297,9 @@
                 window.config = d.data();
                 if (window.renderDescList) { renderSubChips(); renderDescList(); }
                 if (document.getElementById('tab-analise').classList.contains('active')) renderSubDetail();
+                renderTudo();
+                if (window._qaView === 'ana') renderQuintaAnalise();
+                if (document.getElementById('orgModal').classList.contains('open')) renderOrg();
                 document.getElementById('cfgD25').value = window.config.d25;
                 document.getElementById('cfgDev25').value = window.config.dev25;
                 render();
