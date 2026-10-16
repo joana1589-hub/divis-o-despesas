@@ -157,6 +157,17 @@
         input:focus, select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(91,140,219,0.1); }
 
         /* Categorias Grid */
+        .desc-list { margin-top: 10px; }
+        .desc-list-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; font-weight: 800; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; }
+        .desc-list-head button { border: none; background: none; color: var(--accent); font-weight: 700; font-size: 0.75rem; cursor: pointer; font-family: 'DM Sans', sans-serif; text-transform: none; letter-spacing: 0; padding: 2px 4px; }
+        .desc-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+        .desc-chip { border: 1.5px solid var(--light-gray); background: white; border-radius: 50px; padding: 8px 13px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; color: var(--dark); display: inline-flex; align-items: center; gap: 6px; }
+        .desc-chip.selected { border-color: var(--accent); background: rgba(91,140,219,0.1); color: var(--accent); }
+        .desc-chip.add { border-style: dashed; color: var(--gray); }
+        .desc-chip .x { display: none; width: 18px; height: 18px; border-radius: 50%; background: var(--danger); color: white; font-size: 0.65rem; line-height: 18px; text-align: center; }
+        .desc-list.editing .desc-chip:not(.add) .x { display: inline-block; }
+        .desc-list.editing .desc-chip:not(.add) { border-color: #f5b7b1; }
+        .desc-empty { font-size: 0.78rem; color: var(--gray); }
         .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 4px; }
         .cat-btn {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -567,7 +578,8 @@
             </div>
             <div class="form-group">
                 <label>Descrição</label>
-                <input type="text" id="inDesc" placeholder="Ex: Compras Lidl, Renda...">
+                <input type="text" id="inDesc" placeholder="Ex: Compras Lidl, Renda..." autocomplete="off">
+                <div class="desc-list" id="descList" style="display:none;"></div>
             </div>
             <div class="form-group" id="notaGroup">
                 <label>📝 Nota (opcional)</label>
@@ -1127,6 +1139,7 @@
             refreshYearOptions();
             render();
             renderTudo();
+            renderDescList();
             // Cria apenas as ocorrências mensais que estejam em falta.
             // A ocorrência de cada mês é um registo independente, pelo que
             // o valor pode ser alterado sem alterar meses anteriores.
@@ -1135,6 +1148,7 @@
         onSnapshot(doc(db, "settings", "config"), d => {
             if (d.exists()) {
                 window.config = d.data();
+                if (window.renderDescList) renderDescList();
                 document.getElementById('cfgD25').value = window.config.d25;
                 document.getElementById('cfgDev25').value = window.config.dev25;
                 render();
@@ -1228,6 +1242,7 @@
             nota: document.getElementById('inNota').value.trim() || null
         };
         if (!data.date || !data.desc || isNaN(data.val) || data.val <= 0) return alert("Preenche todos os campos!");
+        if (data.cat) data.desc = canonicalDesc(data.cat, data.desc);
 
         try {
             if (window.editingId) {
@@ -1252,6 +1267,7 @@
                     data.recurDay = parseInt(date.slice(8,10), 10);
                 }
                 await addDoc(collection(db, "registos"), withAuthor(data, true));
+                noteDescUsed(data.cat, data.desc);
                 // As ocorrências em falta (até ao mês atual) são criadas pelo
                 // listener através de ensureRecurringOccurrences().
 
@@ -1314,7 +1330,7 @@
         await setDoc(doc(db, "settings", "config"), {
             d25: parseFloat(document.getElementById('cfgD25').value) || 0,
             dev25: document.getElementById('cfgDev25').value
-        });
+        }, { merge: true });
     };
 
     window.editCloud = (id) => {
@@ -1335,6 +1351,8 @@
         document.getElementById('inNota').value = r.nota || '';
         document.getElementById('inCat').value = r.cat || '';
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('selected', b.dataset.id === (r.cat || '')));
+        window._descEditing = false;
+        renderDescList();
         document.getElementById('recurToggle').classList.toggle('on', window._recurOn);
         document.getElementById('titleForm').innerText = "Editar Despesa";
         document.getElementById('btnCancel').style.display = "block";
@@ -1394,10 +1412,125 @@
         document.getElementById('inCat').value = id;
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('selected', b.dataset.id === id));
         const cat = CATS.find(c => c.id === id);
-        if (cat && !document.getElementById('inDesc').value) {
-            document.getElementById('inDesc').value = cat.label;
-        }
+        const inp = document.getElementById('inDesc');
+        // Se a descrição era só o nome de uma categoria, limpa-a (fica como sugestão).
+        if (CATS.some(c => c.label === inp.value.trim())) inp.value = '';
+        inp.placeholder = cat ? `${cat.label} — escreve ou escolhe da lista` : 'Ex: Compras Lidl, Renda...';
+        window._descEditing = false;
+        renderDescList();
     }
+
+    // ═══ LISTAS DE DESCRIÇÕES POR CATEGORIA ═══
+    // A lista de cada categoria junta: as descrições já usadas nessa categoria (as mais
+    // usadas primeiro) + as acrescentadas à mão, menos as que foram tiradas da lista.
+    // Fica em settings/config (descExtra / descHidden) para os dois verem o mesmo.
+    const normD = t => String(t || '').trim().replace(/\s+/g, ' ');
+    const keyD = t => normD(t).toLocaleLowerCase('pt');
+    function descListFor(cat, includeHidden) {
+        if (!cat) return [];
+        const label = keyD(CATS.find(c => c.id === cat)?.label);
+        const hidden = new Set(includeHidden ? [] : ((window.config?.descHidden || {})[cat] || []).map(keyD));
+        const map = new Map();   // chave → { n, forms: { "Lidl": 3, "lidl": 1 } }
+        const add = (txt, inc) => {
+            const k = keyD(txt);
+            if (!k || k === label) return;
+            const e = map.get(k) || { n: 0, forms: {} };
+            const f = normD(txt);
+            e.n += inc; e.forms[f] = (e.forms[f] || 0) + 1;
+            map.set(k, e);
+        };
+        (window.registros || []).forEach(r => { if (r.type === 'EXP' && r.cat === cat) add(r.desc, 1); });
+        ((window.config?.descExtra || {})[cat] || []).forEach(nm => add(nm, 0));
+        // Mostra a forma mais usada (em empate, a que começa por maiúscula).
+        const best = forms => Object.entries(forms).sort((a, b) =>
+            b[1] - a[1] || (/^\p{Lu}/u.test(b[0]) - /^\p{Lu}/u.test(a[0])) || a[0].localeCompare(b[0], 'pt'))[0][0];
+        return [...map.entries()].filter(([k]) => !hidden.has(k))
+            .map(([, e]) => ({ name: best(e.forms), n: e.n }))
+            .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'pt'))
+            .map(e => e.name);
+    }
+    window.descListFor = descListFor;
+    // Se o nome escrito já existe na lista (com outras maiúsculas/espaços), usa o da lista.
+    function canonicalDesc(cat, desc) {
+        const k = keyD(desc);
+        const hit = descListFor(cat, true).find(nm => keyD(nm) === k)
+            || ((window.config?.descHidden || {})[cat] || []).find(nm => keyD(nm) === k);
+        return hit ? normD(hit) : normD(desc);
+    }
+    window.canonicalDesc = canonicalDesc;
+
+    function renderDescList() {
+        const box = document.getElementById('descList');
+        if (!box) return;
+        const cat = document.getElementById('inCat').value;
+        if (!cat) { box.style.display = 'none'; return; }
+        const label = CATS.find(c => c.id === cat)?.label || '';
+        const items = descListFor(cat);
+        const cur = keyD(document.getElementById('inDesc').value);
+        const editing = !!window._descEditing && items.length > 0;
+        box.style.display = 'block';
+        box.classList.toggle('editing', editing);
+        box.innerHTML = `<div class="desc-list-head"><span>📋 Lista de ${escHtml(label)}</span>${items.length ? `<button type="button" data-act="edit">${editing ? '✓ Feito' : '✏️ Editar'}</button>` : ''}</div>
+            <div class="desc-chips">
+                ${items.map(nm => `<button type="button" class="desc-chip${keyD(nm) === cur ? ' selected' : ''}" data-name="${escHtml(nm)}">${escHtml(nm)}<span class="x">✕</span></button>`).join('')}
+                <button type="button" class="desc-chip add" data-act="add">＋ Novo</button>
+            </div>
+            ${items.length ? '' : `<div class="desc-empty" style="margin-top:6px;">Ainda sem nomes. O que escreveres na descrição fica guardado aqui para a próxima vez.</div>`}`;
+    }
+    window.renderDescList = renderDescList;
+
+    async function saveDescPrefs(patch) {
+        const { db, doc, setDoc } = window._fb;
+        window.config = { ...(window.config || {}), ...patch };
+        renderDescList();
+        try { await setDoc(doc(db, 'settings', 'config'), patch, { merge: true }); }
+        catch (e) { console.error(e); alert('Não foi possível guardar a lista: ' + e.message); }
+    }
+    function noteDescUsed(cat, desc) {
+        if (!cat || !desc) return;
+        const hid = { ...((window.config || {}).descHidden || {}) };
+        const list = hid[cat] || [];
+        if (!list.some(x => keyD(x) === keyD(desc))) return;
+        hid[cat] = list.filter(x => keyD(x) !== keyD(desc));
+        saveDescPrefs({ descHidden: hid });
+    }
+    window.noteDescUsed = noteDescUsed;
+
+    document.getElementById('descList').addEventListener('click', e => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const cat = document.getElementById('inCat').value;
+        if (btn.dataset.act === 'edit') { window._descEditing = !window._descEditing; renderDescList(); return; }
+        if (btn.dataset.act === 'add') {
+            const nm = normD(prompt('Novo nome para a lista:') || '');
+            if (!nm) return;
+            const ext = { ...((window.config || {}).descExtra || {}) };
+            const hid = { ...((window.config || {}).descHidden || {}) };
+            ext[cat] = [...new Set([...(ext[cat] || []), nm])];
+            hid[cat] = (hid[cat] || []).filter(x => keyD(x) !== keyD(nm));
+            document.getElementById('inDesc').value = nm;
+            saveDescPrefs({ descExtra: ext, descHidden: hid });
+            return;
+        }
+        const nm = btn.dataset.name;
+        if (!nm) return;
+        if (window._descEditing) {
+            if (!confirm(`Tirar "${nm}" da lista?\n\n(As despesas já gravadas não mudam.)`)) return;
+            const ext = { ...((window.config || {}).descExtra || {}) };
+            const hid = { ...((window.config || {}).descHidden || {}) };
+            ext[cat] = (ext[cat] || []).filter(x => keyD(x) !== keyD(nm));
+            hid[cat] = [...new Set([...(hid[cat] || []), nm])];
+            saveDescPrefs({ descExtra: ext, descHidden: hid });
+            return;
+        }
+        document.getElementById('inDesc').value = nm;
+        renderDescList();
+        const v = document.getElementById('inVal');
+        if (v && !v.value) v.focus();
+    });
+    document.getElementById('inDesc').addEventListener('input', () => {
+        if (!window._descEditing) renderDescList();
+    });
 
     function getCatIcon(catId) {
         return CATS.find(c => c.id === catId)?.icon || '📦';
@@ -1970,7 +2103,10 @@
         document.getElementById('recurToggle').classList.remove('on');
         document.getElementById('btnCancel').style.display = "none";
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+        document.getElementById('inDesc').placeholder = 'Ex: Compras Lidl, Renda...';
+        window._descEditing = false;
         setType('EXP');
+        renderDescList();
     }
 
 
