@@ -197,6 +197,13 @@
         .arr-what b { color: var(--dark); font-weight: 700; }
         .arr-row select { margin-left: 30px; width: calc(100% - 30px); padding: 8px; font-size: 0.8rem; }
         .arr-sum { background: var(--bg); border-radius: 12px; padding: 10px 12px; font-size: 0.8rem; margin-bottom: 8px; }
+        .qa-tabs button.active { color: var(--obra-dark); }
+        .qa-mrow { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 6px; font-size: 0.78rem; padding: 6px 0; border-bottom: 1px solid var(--light-gray); }
+        .qa-mrow b { font-family: 'DM Mono', monospace; font-weight: 600; text-align: right; }
+        .qa-mrow.head { font-weight: 800; color: var(--gray); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .qa-mrow.head span:not(:first-child) { text-align: right; }
+        .tag-qa-obra { background: var(--obra-bg); color: var(--obra-dark); }
+        .tag-qa-mensal { background: #e8f0fc; color: #3b6fc4; }
         .desc-list { margin-top: 10px; }
         .desc-list-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; font-weight: 800; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; }
         .desc-list-head button { border: none; background: none; color: var(--accent); font-weight: 700; font-size: 0.75rem; cursor: pointer; font-family: 'DM Sans', sans-serif; text-transform: none; letter-spacing: 0; padding: 2px 4px; }
@@ -787,6 +794,53 @@
             </div>
         </div>
 
+        <div class="wed-kind-tabs qa-tabs" style="grid-template-columns:1fr 1fr;">
+            <button id="qaTab-reg" class="active" onclick="setQuintaView('reg')">📋 Registos</button>
+            <button id="qaTab-ana" onclick="setQuintaView('ana')">📊 Análise</button>
+        </div>
+
+        <!-- ANÁLISE DA QUINTA (só leitura) -->
+        <div id="qaView" style="display:none;">
+            <div class="filter-group" style="margin-bottom:14px;">
+                <select id="qaAno" onchange="renderQuintaAnalise()"></select>
+                <select id="qaFonte" onchange="renderQuintaAnalise()">
+                    <option value="all">Tudo</option>
+                    <option value="mensal">Só despesas da categoria</option>
+                    <option value="obra">Só obra / compra</option>
+                </select>
+            </div>
+            <div class="obra-header">
+                <div class="obra-header-label" id="qaTotLabel">Total gasto com a Quinta Guarda</div>
+                <div class="obra-total" id="qaTotal">0.00€</div>
+                <div class="obra-total-sub" id="qaTotSub"></div>
+                <div class="wed-split">
+                    <div><span>🏗️ Obra e compra</span><b id="qaObra">0.00€</b></div>
+                    <div><span>🔁 Despesas da categoria</span><b id="qaMensal">0.00€</b></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">🧾 Por subcategoria</div>
+                <div id="qaGroups"></div>
+                <p class="wed-hint" style="margin-top:8px;">Toca numa linha para ver os nomes. "Obra e compra" vem do separador Registos; o resto vem das despesas com categoria 🏡 Quinta Guarda.</p>
+            </div>
+            <div class="card">
+                <div class="card-title">📅 Por mês</div>
+                <div class="chart-container"><canvas id="qaChart"></canvas></div>
+                <div id="qaMonths" style="margin-top:12px;"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">👥 Quem pagou</div>
+                <div id="qaPeople"></div>
+                <p class="wed-hint" id="qaPeopleHint"></p>
+            </div>
+            <div class="card">
+                <div class="card-title">📋 Todos os movimentos</div>
+                <div id="qaList"></div>
+                <button class="btn btn-export-xl" style="margin-top:10px;" onclick="exportQuintaAnalise()">📊 Exportar análise para Excel</button>
+            </div>
+        </div>
+
+        <div id="obraRegView">
         <div class="obra-header">
             <div class="obra-header-label">Total Investido na Quinta Guarda</div>
             <div class="obra-total" id="obraTotalGeral">0.00€</div>
@@ -837,6 +891,7 @@
             </div>
             <div id="obraList"></div>
         </div>
+        </div><!-- /obraRegView -->
     </div>
 
     <!-- CASAMENTO TAB (totalmente separado: coleção "casamento") -->
@@ -1232,6 +1287,7 @@
             render();
             renderTudo();
             renderDescList();
+            if (window._qaView === 'ana' && document.getElementById('tab-obra').classList.contains('active')) renderQuintaAnalise();
             // Cria apenas as ocorrências mensais que estejam em falta.
             // A ocorrência de cada mês é um registo independente, pelo que
             // o valor pode ser alterado sem alterar meses anteriores.
@@ -1253,6 +1309,7 @@
             refreshYearOptions();
             renderObra();
             renderTudo();
+            if (window._qaView === 'ana') renderQuintaAnalise();
         });
         // Casamento — coleção separada, não entra em nenhuma outra conta
         onSnapshot(query(collection(db, "casamento"), orderBy("date", "desc")), snap => {
@@ -2047,6 +2104,154 @@
     });
     document.getElementById('subCatSel').addEventListener('change', e => { window._subCatSel = e.target.value; });
 
+    // ═══ ANÁLISE DA QUINTA GUARDA (só leitura) ═══
+    // Junta as despesas da categoria "quinta" (registos) com os registos do separador
+    // Quinta Guarda (obra). Não altera nada.
+    window._qaView = 'reg';
+    function setQuintaView(v) {
+        window._qaView = v;
+        document.getElementById('qaTab-reg').classList.toggle('active', v === 'reg');
+        document.getElementById('qaTab-ana').classList.toggle('active', v === 'ana');
+        document.getElementById('obraRegView').style.display = v === 'reg' ? '' : 'none';
+        document.getElementById('qaView').style.display = v === 'ana' ? '' : 'none';
+        if (v === 'ana') renderQuintaAnalise();
+    }
+    window.setQuintaView = setQuintaView;
+
+    function quintaMovimentos() {
+        const out = [];
+        (window.registros || []).forEach(r => {
+            if (r.type === 'EXP' && r.cat === 'quinta' && r.date) {
+                const sid = subOf(r);
+                out.push({ src: 'mensal', date: r.date, desc: r.desc || '', val: Number(r.val) || 0, quem: r.quem,
+                    grupo: sid ? subLabel('quinta', sid) : 'Sem subcategoria', grupoId: sid || '_none', recur: !!r.recur, nota: r.nota || '' });
+            }
+        });
+        (window.obraRegistos || []).forEach(r => {
+            if (r.date) out.push({ src: 'obra', date: r.date, desc: r.desc || '', val: Number(r.val) || 0, quem: r.quem,
+                grupo: 'Obra e compra', grupoId: '_obra', recur: false, nota: '' });
+        });
+        return out.sort((a, b) => b.date.localeCompare(a.date));
+    }
+    function quintaFiltrados() {
+        const ano = document.getElementById('qaAno')?.value || 'all';
+        const fonte = document.getElementById('qaFonte')?.value || 'all';
+        return quintaMovimentos().filter(m => (ano === 'all' || m.date.startsWith(ano)) && (fonte === 'all' || m.src === fonte));
+    }
+
+    function renderQuintaAnalise() {
+        const selAno = document.getElementById('qaAno');
+        if (!selAno) return;
+        const all = quintaMovimentos();
+        const anos = [...new Set(all.map(m => m.date.slice(0, 4)))].sort().reverse();
+        const cur = selAno.value || 'all';
+        selAno.innerHTML = '<option value="all">Ano: Todos</option>' + anos.map(a => `<option value="${a}">${a}</option>`).join('');
+        selAno.value = anos.includes(cur) ? cur : 'all';
+        const rows = quintaFiltrados();
+        const sum = f => rows.filter(f).reduce((s, m) => s + m.val, 0);
+        const tot = sum(() => true), tObra = sum(m => m.src === 'obra'), tMens = sum(m => m.src === 'mensal');
+        document.getElementById('qaTotal').innerText = eur(tot);
+        document.getElementById('qaObra').innerText = eur(tObra);
+        document.getElementById('qaMensal').innerText = eur(tMens);
+        // média mensal das despesas da categoria (do 1º mês com despesas até ao mês atual)
+        const mensMeses = rows.filter(m => m.src === 'mensal').map(m => m.date.slice(0, 7)).sort();
+        let media = '';
+        if (mensMeses.length) {
+            const [y0, m0] = mensMeses[0].split('-').map(Number);
+            const last = (document.getElementById('qaAno').value !== 'all') ? mensMeses[mensMeses.length - 1] : todayISO().slice(0, 7);
+            const [y1, m1] = last.split('-').map(Number);
+            const nMeses = Math.max(1, (y1 - y0) * 12 + (m1 - m0) + 1);
+            media = ` · média de ${eur(tMens / nMeses)}/mês em despesas da categoria (${nMeses} mes${nMeses > 1 ? 'es' : ''})`;
+        }
+        document.getElementById('qaTotSub').innerText = `${rows.length} movimento(s)${media}`;
+
+        // Por subcategoria
+        const groups = new Map();
+        rows.forEach(m => {
+            const g = groups.get(m.grupoId) || { label: m.grupo, src: m.src, tot: 0, names: new Map() };
+            g.tot += m.val;
+            const k = m.desc.toLocaleLowerCase('pt');
+            const ne = g.names.get(k) || { name: m.desc || '—', tot: 0, n: 0 };
+            ne.tot += m.val; ne.n++; g.names.set(k, ne);
+            groups.set(m.grupoId, g);
+        });
+        const gl = [...groups.values()].sort((a, b) => b.tot - a.tot);
+        const max = Math.max(...gl.map(g => g.tot), 1);
+        document.getElementById('qaGroups').innerHTML = gl.length ? gl.map((g, i) => {
+            const pct = tot ? Math.round(g.tot / tot * 100) : 0;
+            const names = [...g.names.values()].sort((a, b) => b.tot - a.tot)
+                .map(n => `<div class="sub-name"><span>${escHtml(n.name)}${n.n > 1 ? ` <small>(${n.n}×)</small>` : ''}</span><b>${n.tot.toFixed(2)}€</b></div>`).join('');
+            return `<div class="sub-row${i === 0 ? ' open' : ''}">
+                <div class="sub-row-top"><span>${g.src === 'obra' ? '🏗️' : '🔁'} ${escHtml(g.label)}<small>${pct}%</small></span><b>${g.tot.toFixed(2)}€</b></div>
+                <div class="sub-bar"><i style="width:${Math.max(3, g.tot / max * 100)}%;background:${g.src === 'obra' ? 'var(--obra)' : 'var(--accent)'};"></i></div>
+                <div class="sub-names">${names}</div></div>`;
+        }).join('') : '<div class="desc-empty">Sem movimentos.</div>';
+
+        // Por mês
+        const meses = {};
+        rows.forEach(m => { const k = m.date.slice(0, 7); const x = meses[k] = meses[k] || { obra: 0, mensal: 0 }; x[m.src] += m.val; });
+        const ks = Object.keys(meses).sort();
+        const nomes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+        const lab = k => `${nomes[parseInt(k.slice(5, 7)) - 1]} ${k.slice(2, 4)}`;
+        if (myCharts.qaChart) myCharts.qaChart.destroy();
+        const ctx = document.getElementById('qaChart')?.getContext('2d');
+        if (ctx && ks.length) {
+            myCharts.qaChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: ks.map(lab), datasets: [
+                    { label: 'Obra e compra', data: ks.map(k => +meses[k].obra.toFixed(2)), backgroundColor: '#e67e22', stack: 's' },
+                    { label: 'Despesas da categoria', data: ks.map(k => +meses[k].mensal.toFixed(2)), backgroundColor: '#5b8cdb', stack: 's' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } },
+                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'DM Sans', size: 12 } } } } }
+            });
+        }
+        document.getElementById('qaMonths').innerHTML = ks.length ? `<div class="qa-mrow head"><span>Mês</span><span>Obra</span><span>Categoria</span><span>Total</span></div>` +
+            ks.slice().reverse().map(k => `<div class="qa-mrow"><span>${lab(k)}</span><b>${meses[k].obra.toFixed(2)}€</b><b>${meses[k].mensal.toFixed(2)}€</b><b>${(meses[k].obra + meses[k].mensal).toFixed(2)}€</b></div>`).join('') : '';
+
+        // Quem pagou
+        const ppl = ['Joana', 'Toni', 'Conjunto'].map(n => [n, sum(m => m.quem === n)]).filter(([, v]) => v > 0.004);
+        document.getElementById('qaPeople').innerHTML = ppl.length ? ppl.map(([n, v]) =>
+            `<div class="wed-kv"><span>${n === 'Joana' ? '🔴' : n === 'Toni' ? '🔵' : '🟢'} ${n}</span><b>${eur(v)}</b></div>`).join('') : '<div class="desc-empty">—</div>';
+        document.getElementById('qaPeopleHint').innerText = tMens > 0.004
+            ? 'As despesas da categoria são divididas a meias no balanço da Casa; aqui mostra-se só quem as pagou.' : '';
+
+        // Lista
+        document.getElementById('qaList').innerHTML = rows.length ? rows.map(m => {
+            const [yy, mm, dd] = m.date.split('-');
+            const pCls = m.quem === 'Joana' ? 'tag-j' : m.quem === 'Toni' ? 'tag-t' : 'tag-c';
+            return `<div class="wed-item" style="border-left-color:${m.src === 'obra' ? 'var(--obra)' : 'var(--accent)'}">
+                <div class="item-icon">${m.src === 'obra' ? '🏗️' : '🔁'}</div>
+                <div class="wed-item-main">
+                    <div class="wed-item-top"><div class="item-desc">${escHtml(m.desc)}</div><div class="item-val desp">${m.val.toFixed(2)}€</div></div>
+                    <div class="item-meta">${parseInt(dd)} ${nomes[parseInt(mm) - 1]} ${yy}
+                        <span class="tag ${m.src === 'obra' ? 'tag-qa-obra' : 'tag-qa-mensal'}">${escHtml(m.grupo)}</span>
+                        <span class="tag ${pCls}">${escHtml(m.quem || '')}</span>${m.recur ? ' <span class="tag tag-recur">🔁</span>' : ''}</div>
+                </div></div>`;
+        }).join('') : '<div class="desc-empty">Sem movimentos.</div>';
+    }
+    window.renderQuintaAnalise = renderQuintaAnalise;
+    document.getElementById('qaGroups').addEventListener('click', e => { const r = e.target.closest('.sub-row'); if (r) r.classList.toggle('open'); });
+
+    function exportQuintaAnalise() {
+        const rows = quintaFiltrados().slice().reverse();
+        if (!rows.length) return showToast('⚠️ Sem movimentos');
+        const data = rows.map(m => ({ 'Data': m.date, 'Origem': m.src === 'obra' ? 'Obra e compra' : 'Despesa da categoria',
+            'Subcategoria': m.grupo, 'Descrição': m.desc, 'Quem pagou': m.quem || '', 'Valor (€)': r2(m.val),
+            'Recorrente': m.recur ? 'Sim' : '', 'Nota': m.nota }));
+        const S = f => r2(rows.filter(f).reduce((s, m) => s + m.val, 0));
+        const grupos = {}; rows.forEach(m => grupos[m.grupo] = (grupos[m.grupo] || 0) + m.val);
+        const resumo = [
+            { 'Resumo': 'Total', 'Valor (€)': S(() => true) },
+            { 'Resumo': 'Obra e compra', 'Valor (€)': S(m => m.src === 'obra') },
+            { 'Resumo': 'Despesas da categoria Quinta Guarda', 'Valor (€)': S(m => m.src === 'mensal') },
+            ...Object.entries(grupos).sort((a, b) => b[1] - a[1]).map(([g, v]) => ({ 'Resumo': '  ' + g, 'Valor (€)': r2(v) })),
+            ...['Joana', 'Toni', 'Conjunto'].map(n => ({ 'Resumo': 'Pago por ' + n, 'Valor (€)': S(m => m.quem === n) }))
+        ];
+        saveWorkbook(`analise_quinta_${todayISO()}.xlsx`, [['Resumo', makeSheet(resumo, [38, 14])], ['Movimentos', makeSheet(data, [12, 20, 20, 28, 11, 11, 10, 28])]]);
+        showToast('📊 Excel exportado!');
+    }
+    window.exportQuintaAnalise = exportQuintaAnalise;
+
     // ═══ LISTAS DE DESCRIÇÕES POR CATEGORIA ═══
     // A lista de cada categoria junta: as descrições já usadas nessa categoria (as mais
     // usadas primeiro) + as acrescentadas à mão, menos as que foram tiradas da lista.
@@ -2693,7 +2898,7 @@
         const target = document.getElementById('tab-' + tab);
         if (target) target.classList.add('active');
         if (el) el.classList.add('active');
-        if (tab === 'obra') { renderObra(); return; }
+        if (tab === 'obra') { renderObra(); if (window._qaView === 'ana') renderQuintaAnalise(); return; }
         if (tab === 'casamento') { renderWed(); return; }
         if (tab === 'tudo') { renderTudo(); return; }
         if (tab === 'acertos') { render(); renderAcertos(); return; }
