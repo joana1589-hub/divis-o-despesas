@@ -376,8 +376,11 @@ function escreverTudo_(ss, d, agora) {
   // ── Resumo ──
   resumo_(ss, regs, exp, pay, obra, wed, cfg, agora);
 
+  // ── Análise Quinta (obra + despesas da categoria Quinta Guarda) ──
+  analiseQuinta_(ss, exp, obra, cfg, agora);
+
   // Ordem dos separadores (só mexe se estiver diferente)
-  const ordem = ['Resumo', 'Casa', 'Acertos', 'Quinta Guarda', 'Casamento', 'Prendas', 'Tudo'];
+  const ordem = ['Resumo', 'Casa', 'Acertos', 'Quinta Guarda', 'Análise Quinta', 'Casamento', 'Prendas', 'Tudo'];
   const atual = ss.getSheets().map(x => x.getName()).filter(n => ordem.includes(n));
   if (atual.join('|') !== ordem.join('|')) {
     ordem.forEach((n, i) => { const sh = ss.getSheetByName(n); if (sh) { ss.setActiveSheet(sh); ss.moveActiveSheet(i + 1); } });
@@ -522,4 +525,123 @@ function resumo_(ss, regs, exp, pay, obra, wed, cfg, agora) {
     if (/^\d{4}$/.test(String(l[0]))) { sh.getRange(i + 1, 5).setNumberFormat('0'); sh.getRange(i + 1, 2, 1, 2).setNumberFormat('@'); }
   });
   sh.setColumnWidth(1, 300); [2, 3, 4, 5].forEach(c2 => sh.setColumnWidth(c2, 130));
+}
+
+// ═════════════════════════ ANÁLISE QUINTA ═════════════════════════
+// Só leitura: junta os registos do separador Quinta Guarda da app (obra/compra) com as
+// despesas da categoria 🏡 Quinta Guarda. Não entra em nenhuma conta.
+function analiseQuinta_(ss, exp, obra, cfg, agora) {
+  const sh = obterFolha_(ss, 'Análise Quinta');
+  sh.clear();
+  (sh.getCharts ? sh.getCharts() : []).forEach(c => sh.removeChart(c));
+
+  const mov = [];
+  exp.filter(r => r.cat === 'quinta').forEach(r => mov.push({ src: 'mensal', date: r.date, desc: r.desc || '', val: num(r.val), quem: r.quem || '',
+    grupo: subOf_(cfg, r) || 'Sem subcategoria', recur: !!r.recur }));
+  obra.forEach(r => mov.push({ src: 'obra', date: r.date, desc: r.desc || '', val: num(r.val), quem: r.quem || '', grupo: 'Obra e compra', recur: false }));
+  mov.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+
+  const sum = f => mov.filter(f).reduce((s2, m) => s2 + m.val, 0);
+  const tot = sum(() => true), tObra = sum(m => m.src === 'obra'), tMens = sum(m => m.src === 'mensal');
+  const mensMeses = mov.filter(m => m.src === 'mensal').map(m => m.date.slice(0, 7)).sort();
+  let nMeses = 0;
+  if (mensMeses.length) {
+    const [y0, m0] = mensMeses[0].split('-').map(Number);
+    const hoje = Utilities.formatDate(agora, 'Europe/Lisbon', 'yyyy-MM');
+    const [y1, m1] = hoje.split('-').map(Number);
+    nMeses = Math.max(1, (y1 - y0) * 12 + (m1 - m0) + 1);
+  }
+
+  const L = [], fmt = [];
+  const W = 6;
+  const pad = a => a.concat(Array(W - a.length).fill(''));
+  const titulo = t => { L.push(pad([t])); fmt.push([L.length, 'titulo']); };
+  const cab = (...c) => { L.push(pad(c)); fmt.push([L.length, 'cab']); };
+  const lin = (...c) => { L.push(pad(c)); };
+  const vazio = () => L.push(pad([]));
+
+  L.push(pad(['🏡 Análise da Quinta Guarda'])); fmt.push([1, 'grande']);
+  L.push(pad(['Só leitura · obra/compra (separador Quinta Guarda) + despesas da categoria 🏡 Quinta Guarda · atualizado ' + Utilities.formatDate(agora, 'Europe/Lisbon', 'dd/MM/yyyy HH:mm')]));
+  vazio();
+  titulo('TOTAIS');
+  lin('Total gasto com a Quinta Guarda', r2(tot)); fmt.push([L.length, 'eurB']);
+  lin('🏗️ Obra e compra', r2(tObra)); fmt.push([L.length, 'eurB']);
+  lin('🔁 Despesas da categoria', r2(tMens)); fmt.push([L.length, 'eurB']);
+  if (nMeses) { lin(`Média mensal das despesas da categoria (${nMeses} meses)`, r2(tMens / nMeses)); fmt.push([L.length, 'eurB']); }
+  vazio();
+
+  // Por subcategoria
+  const grupos = {};
+  mov.forEach(m => {
+    const g = grupos[m.grupo] = grupos[m.grupo] || { src: m.src, tot: 0, nomes: {} };
+    g.tot += m.val;
+    const k = m.desc.toLowerCase();
+    const n = g.nomes[k] = g.nomes[k] || { nome: m.desc || '—', tot: 0, n: 0 };
+    n.tot += m.val; n.n++;
+  });
+  const gl = Object.keys(grupos).sort((a, b) => grupos[b].tot - grupos[a].tot);
+  titulo('POR SUBCATEGORIA');
+  cab('Subcategoria', 'Total (€)', '%', 'Origem');
+  gl.forEach(k => { lin(k, r2(grupos[k].tot), tot ? grupos[k].tot / tot : 0, grupos[k].src === 'obra' ? 'Obra e compra' : 'Categoria'); fmt.push([L.length, 'eurPct']); });
+  vazio();
+  titulo('POR SUBCATEGORIA E NOME');
+  cab('Subcategoria', 'Nome', 'Nº', 'Total (€)');
+  gl.forEach(k => Object.values(grupos[k].nomes).sort((a, b) => b.tot - a.tot)
+    .forEach(n => { lin(k, n.nome, n.n, r2(n.tot)); fmt.push([L.length, 'eurD']); }));
+  vazio();
+
+  // Quem pagou
+  titulo('QUEM PAGOU');
+  ['Joana', 'Toni', 'Conjunto'].forEach(n => { const v = sum(m => m.quem === n); if (v > 0.004) { lin(n, r2(v)); fmt.push([L.length, 'eurB']); } });
+  if (tMens > 0.004) lin('As despesas da categoria contam a meias no balanço da Casa; aqui mostra-se só quem as pagou.');
+  vazio();
+
+  // Movimentos
+  titulo('TODOS OS MOVIMENTOS');
+  cab('Data', 'Origem', 'Subcategoria', 'Descrição', 'Quem pagou', 'Valor (€)');
+  const iniMov = L.length + 1;
+  mov.forEach(m => lin(dataDe(m.date), m.src === 'obra' ? 'Obra e compra' : 'Categoria', m.grupo, m.desc, m.quem, r2(m.val)));
+
+  sh.getRange(1, 1, L.length, W).setValues(L);
+  fmt.forEach(([row, tipo]) => {
+    if (tipo === 'grande') sh.getRange(row, 1).setFontSize(16).setFontWeight('bold');
+    else if (tipo === 'titulo') sh.getRange(row, 1, 1, W).setFontWeight('bold').setBackground('#fef5ec');
+    else if (tipo === 'cab') sh.getRange(row, 1, 1, W).setFontWeight('bold').setFontColor('#7a7f8e');
+    else if (tipo === 'eurB') sh.getRange(row, 2).setNumberFormat(EUR);
+    else if (tipo === 'eurPct') { sh.getRange(row, 2).setNumberFormat(EUR); sh.getRange(row, 3).setNumberFormat('0%'); }
+    else if (tipo === 'eurD') sh.getRange(row, 4).setNumberFormat(EUR);
+  });
+  if (mov.length) {
+    sh.getRange(iniMov, 1, mov.length, 1).setNumberFormat(DATA_FMT);
+    sh.getRange(iniMov, 6, mov.length, 1).setNumberFormat(EUR);
+  }
+
+  // Por mês (à direita) + gráfico
+  const meses = {};
+  mov.forEach(m => { const k = m.date.slice(0, 7); const x = meses[k] = meses[k] || { obra: 0, mensal: 0 }; x[m.src] += m.val; });
+  const ks = Object.keys(meses).sort();
+  const M = [['Mês', 'Obra e compra (€)', 'Despesas da categoria (€)', 'Total (€)']]
+    .concat(ks.map(k => [`${MESES[Number(k.slice(5, 7)) - 1].slice(0, 3)} ${k.slice(0, 4)}`, r2(meses[k].obra), r2(meses[k].mensal), r2(meses[k].obra + meses[k].mensal)]));
+  sh.getRange(1, 8).setValue('📅 POR MÊS').setFontWeight('bold');
+  sh.getRange(2, 8, M.length, 4).setValues(M);
+  sh.getRange(2, 8, 1, 4).setFontWeight('bold').setFontColor('#7a7f8e');
+  if (ks.length) {
+    sh.getRange(3, 9, ks.length, 3).setNumberFormat(EUR);
+    if (sh.newChart) {
+      const chart = sh.newChart().asColumnChart()
+        .addRange(sh.getRange(2, 8, ks.length + 1, 3))
+        .setStacked()
+        .setNumHeaders(1)
+        .setOption('title', 'Quinta Guarda por mês')
+        .setOption('colors', ['#e67e22', '#5b8cdb'])
+        .setPosition(ks.length + 5, 8, 0, 0)
+        .build();
+      sh.insertChart(chart);
+    }
+  }
+  const props = PropertiesService.getDocumentProperties();
+  if (!props.getProperty('W_Análise Quinta')) {
+    [260, 110, 150, 200, 100, 100, 20, 110, 140, 160, 100].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+    props.setProperty('W_Análise Quinta', '1');
+  }
 }
