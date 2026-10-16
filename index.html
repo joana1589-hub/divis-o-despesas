@@ -1182,7 +1182,8 @@
 
     function startListeners() {
         onSnapshot(query(collection(db, "registos"), orderBy("date", "desc")), async snap => {
-            window.registros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            // Registos eliminados ficam arquivados (deleted: true) e não contam na app.
+            window.registros = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => !r.deleted);
             refreshYearOptions();
             render();
             renderTudo();
@@ -1204,14 +1205,14 @@
         });
         // Obra listener — coleção separada, nunca toca nos "registos"
         onSnapshot(query(collection(db, "obra"), orderBy("date", "desc")), snap => {
-            window.obraRegistos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            window.obraRegistos = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => !r.deleted);
             refreshYearOptions();
             renderObra();
             renderTudo();
         });
         // Casamento — coleção separada, não entra em nenhuma outra conta
         onSnapshot(query(collection(db, "casamento"), orderBy("date", "desc")), snap => {
-            window.wedRegistos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            window.wedRegistos = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => !r.deleted);
             refreshYearOptions();
             renderWed();
             renderTudo();
@@ -1252,7 +1253,7 @@
         if (confirm("Eliminar este registo?")) {
             try {
                 const dbRef = await window._obraDBReady;
-                await deleteDoc(doc(dbRef, "obra", id));
+                await archiveDoc("obra", id);
                 showToast("🗑️ Eliminado");
             } catch(e) {
                 alert("Erro: " + e.message);
@@ -1343,7 +1344,7 @@
         }
         if (confirm("Eliminar este registo?")) {
             try {
-                await deleteDoc(doc(db, "registos", id));
+                await archiveDoc("registos", id);
                 showToast("🗑️ Registo eliminado");
             } catch (e) { alert("Erro ao eliminar: " + e.message); }
         }
@@ -1359,7 +1360,9 @@
         const r = window.registros.find(x => x.id === id);
         if (!r || mode === 'cancel') return;
         try {
-            const marker = { type: 'SKIP', date: r.date, recurKey: r.recurKey, recur: false,
+            // O marcador guarda os dados originais (para o histórico), mas como SKIP não conta.
+            const { id: _id, ...orig } = r;
+            const marker = { ...orig, origType: r.type, type: 'SKIP', recurKey: r.recurKey, recur: false,
                 deletedBy: window.currentUserName || null, deletedAt: new Date().toISOString() };
             if (mode === 'one') {
                 await setDoc(doc(db, "registos", id), marker);
@@ -1367,7 +1370,7 @@
             } else {
                 const later = window.registros.filter(x =>
                     x.id !== id && x.recurKey === r.recurKey && (x.date || '') > r.date);
-                for (const x of later) await deleteDoc(doc(db, "registos", x.id));
+                for (const x of later) await archiveDoc("registos", x.id);
                 await setDoc(doc(db, "registos", id), { ...marker, ended: true });
                 showToast("⏹️ Série recorrente terminada");
             }
@@ -1429,6 +1432,16 @@
         return isNew ? { ...data, createdBy: who, createdAt: now } : { ...data, updatedBy: who, updatedAt: now };
     }
     window.withAuthor = withAuthor;
+    // Eliminar = arquivar: o registo fica no Firebase com deleted: true (para o histórico
+    // do Google Sheets) mas desaparece da app e das contas.
+    function archiveFields() {
+        return { deleted: true, deletedBy: window.currentUserName || null, deletedAt: new Date().toISOString() };
+    }
+    async function archiveDoc(col, id) {
+        const { db, doc, updateDoc } = window._fb;
+        await updateDoc(doc(db, col, id), archiveFields());
+    }
+    window.archiveFields = archiveFields; window.archiveDoc = archiveDoc;
 
     // ═══ CATEGORIAS ═══
     const CATS = [
@@ -3363,7 +3376,7 @@
         if (!confirm('Eliminar este movimento do casamento?')) return;
         try {
             const { db, doc, deleteDoc } = window._fb;
-            await deleteDoc(doc(db, 'casamento', id));
+            await archiveDoc('casamento', id);
             showToast('🗑️ Eliminado');
         } catch (e) { alert('Erro: ' + e.message); }
     }

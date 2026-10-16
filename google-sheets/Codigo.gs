@@ -275,11 +275,18 @@ const porData = (a, b) => String(b.date || '').localeCompare(String(a.date || ''
 
 function escreverTudo_(ss, d, agora) {
   const cfg = d.config || {};
-  const regs = d.registos.filter(r => r.date);
+  // Os registos eliminados na app ficam arquivados (deleted: true, ou SKIP com os dados
+  // originais nas recorrentes). Saem dos separadores de cada área, mas ficam no "Tudo".
+  const vivo = r => r.date && !r.deleted;
+  const regs = d.registos.filter(vivo);
   const exp = regs.filter(r => r.type === 'EXP').sort(porData);
   const pay = regs.filter(r => r.type === 'PAY').sort(porData);
-  const obra = d.obra.filter(r => r.date).sort(porData);
-  const wed = d.casamento.filter(r => r.date).sort(porData);
+  const obra = d.obra.filter(vivo).sort(porData);
+  const wed = d.casamento.filter(vivo).sort(porData);
+  const elimRegs = d.registos.filter(r => r.date && (
+    (r.deleted && (r.type === 'EXP' || r.type === 'PAY')) || (r.type === 'SKIP' && r.origType && r.desc)));
+  const elimObra = d.obra.filter(r => r.date && r.deleted);
+  const elimWed = d.casamento.filter(r => r.date && r.deleted);
 
   // ── Casa ──
   tabela_(ss, 'Casa', ['Data', 'Categoria', 'Subcategoria', 'Descrição', 'Quem pagou', 'Valor (€)', 'Metade de cada (€)', 'Recorrente', 'Nota', 'Registado por', 'Registado em'],
@@ -316,21 +323,54 @@ function escreverTudo_(ss, d, agora) {
     prendas.map(r => [r.desc || '', r2(r.val), wedMetodo_(r), dataDe(r.date), r.nota || '']),
     { money: [2], dates: [4], widths: [240, 90, 150, 90, 200] });
 
-  // ── Tudo ──
+  // ── Tudo (com histórico do que foi eliminado) ──
+  const TUDO_CAB = ['Data', 'Área', 'Movimento', 'Descrição', 'Categoria', 'Quem', 'Para', 'Método', 'Valor (€)',
+    'Estado', 'Registado por', 'Registado em', 'Eliminado por', 'Eliminado em', 'ID'];
+  const estado = (r, elim) => elim ? ['Eliminado', r.createdBy || '', quando(r.createdAt), r.deletedBy || '', quando(r.deletedAt)]
+                                   : ['Ativo', r.createdBy || '', quando(r.createdAt), '', ''];
   const tudo = [];
-  exp.forEach(r => tudo.push([r.date, 'Casa', 'Saída', r.desc || '', [catLabel(r.cat), subOf_(cfg, r)].filter(Boolean).join(' · '), r.quem, '', '', r2(r.val), r.createdBy || '', quando(r.createdAt)]));
-  pay.forEach(r => tudo.push([r.date, 'Acerto Casa', 'Acerto', r.nota || `Acerto ${r.quem} → ${para(r)}`, '', r.quem, para(r), '', r2(r.val), r.createdBy || '', quando(r.createdAt)]));
-  obra.forEach(r => tudo.push([r.date, 'Quinta Guarda', 'Saída', r.desc || '', '', r.quem, '', '', r2(r.val), r.createdBy || '', quando(r.createdAt)]));
-  wed.forEach(r => {
+  const casaRow = (r, elim) => {
+    const t = r.type === 'SKIP' ? r.origType : r.type;
+    if (t === 'PAY') tudo.push([dataDe(r.date), 'Acerto Casa', 'Acerto', r.nota || `Acerto ${r.quem} → ${para(r)}`, '', r.quem, para(r), '', r2(r.val)]
+      .concat(estado(r, elim), ['registos/' + r.id]));
+    else tudo.push([dataDe(r.date), 'Casa', 'Saída', r.desc || '', [catLabel(r.cat), subOf_(cfg, r)].filter(Boolean).join(' · '), r.quem, '', '', r2(r.val)]
+      .concat(estado(r, elim), ['registos/' + r.id]));
+  };
+  const obraRow = (r, elim) => tudo.push([dataDe(r.date), 'Quinta Guarda', 'Saída', r.desc || '', '', r.quem, '', '', r2(r.val)]
+    .concat(estado(r, elim), ['obra/' + r.id]));
+  const wedRow = (r, elim) => {
     const n = wedNorm_(r);
-    tudo.push([r.date, 'Casamento', n.kind === 'receita' ? 'Entrada' : n.kind === 'despesa' ? 'Saída' : 'Acerto',
+    tudo.push([dataDe(r.date), 'Casamento', n.kind === 'receita' ? 'Entrada' : n.kind === 'despesa' ? 'Saída' : 'Acerto',
       n.kind === 'retirada' ? `${n.quem} tirou do dinheiro junto` : (r.desc || ''), n.kind === 'despesa' ? (WED_CATS[r.cat] || '') : '',
-      n.kind === 'receita' ? (n.conta || 'Conjunto') : n.quem, n.para || '', wedMetodo_(r), r2(r.val), r.createdBy || '', quando(r.createdAt)]);
+      n.kind === 'receita' ? (n.conta || 'Conjunto') : n.quem, n.para || '', wedMetodo_(r), r2(r.val)]
+      .concat(estado(r, elim), ['casamento/' + r.id]));
+  };
+  exp.forEach(r => casaRow(r, false)); pay.forEach(r => casaRow(r, false)); elimRegs.forEach(r => casaRow(r, true));
+  obra.forEach(r => obraRow(r, false)); elimObra.forEach(r => obraRow(r, true));
+  wed.forEach(r => wedRow(r, false)); elimWed.forEach(r => wedRow(r, true));
+
+  // O que já estava no "Tudo" e desapareceu do Firebase (apagado de vez) fica como eliminado.
+  const vistos = new Set(tudo.map(t => t[14]));
+  anteriores_(ss, 'Tudo').forEach(o => {
+    const id = o['ID'];
+    if (!id || vistos.has(id)) return;
+    vistos.add(id);
+    tudo.push(TUDO_CAB.map(h => {
+      if (h === 'Estado') return 'Eliminado';
+      if (h === 'Eliminado em') return o[h] || ('detetado ' + Utilities.formatDate(agora, 'Europe/Lisbon', 'dd/MM/yyyy HH:mm'));
+      return o[h] === undefined ? '' : o[h];
+    }));
   });
-  tudo.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
-  tabela_(ss, 'Tudo', ['Data', 'Área', 'Movimento', 'Descrição', 'Categoria', 'Quem', 'Para', 'Método', 'Valor (€)', 'Registado por', 'Registado em'],
-    tudo.map(t => [dataDe(t[0])].concat(t.slice(1))),
-    { money: [9], dates: [1], widths: [90, 110, 80, 200, 200, 80, 70, 170, 90, 100, 120] });
+  const iso = v => v instanceof Date ? Utilities.formatDate(v, 'Europe/Lisbon', 'yyyy-MM-dd') : String(v || '');
+  tudo.sort((a, b) => iso(b[0]).localeCompare(iso(a[0])));
+  tabela_(ss, 'Tudo', TUDO_CAB, tudo,
+    { money: [9], dates: [1], widths: [90, 110, 80, 200, 200, 80, 70, 170, 90, 80, 100, 120, 100, 130, 60] });
+  const shT = ss.getSheetByName('Tudo');
+  if (shT.setConditionalFormatRules && tudo.length) {
+    const rg = shT.getRange(2, 1, tudo.length, TUDO_CAB.length);
+    shT.setConditionalFormatRules([SpreadsheetApp.newConditionalFormatRule()
+      .whenFormulaSatisfied('=$J2="Eliminado"').setFontColor('#a0a4b0').setStrikethrough(true).setRanges([rg]).build()]);
+  }
 
   // ── Resumo ──
   resumo_(ss, regs, exp, pay, obra, wed, cfg, agora);
@@ -346,6 +386,16 @@ function escreverTudo_(ss, d, agora) {
     const f = ss.getSheetByName(nm);
     if (f && f.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(f);
   });
+}
+
+// Lê as linhas atuais de um separador como objetos { cabeçalho: valor }.
+function anteriores_(ss, nome) {
+  const sh = ss.getSheetByName(nome);
+  if (!sh || sh.getLastRow() < 2) return [];
+  const v = sh.getDataRange().getValues();
+  const cab = v[0].map(String);
+  if (cab.indexOf('ID') < 0) return [];
+  return v.slice(1).map(row => { const o = {}; cab.forEach((h, i) => o[h] = row[i]); return o; });
 }
 
 function obterFolha_(ss, nome) {
